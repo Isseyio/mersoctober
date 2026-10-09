@@ -25,7 +25,13 @@
     --cd-progress-fill: {{ section.settings.progress_fill_color }};
     --cd-checkout-bg: {{ section.settings.checkout_background }};
     --cd-checkout-text: {{ section.settings.checkout_text_color }};
-    --cd-upsell-focus: {{ section.settings.upsell_image_focus | default: '50% 70%' }};
+    {%- case section.settings.upsell_image_focus -%}
+      {%- when 'top' -%}{%- assign cd_focus = '50% 0%' -%}
+      {%- when 'center' -%}{%- assign cd_focus = '50% 50%' -%}
+      {%- when 'bottom' -%}{%- assign cd_focus = '50% 100%' -%}
+      {%- else -%}{%- assign cd_focus = '50% 70%' -%}
+    {%- endcase %}
+    --cd-upsell-focus: {{ cd_focus }};
     {%- if section.settings.product_card_background != blank and section.settings.product_card_background != 'rgba(0,0,0,0)' %}
     --cd-card-bg: {{ section.settings.product_card_background }};
     {%- endif %}
@@ -736,7 +742,7 @@
       "info": "Match this to your shipping rates in Shopify admin. A free shipping discount code always shows as activated.",
       "options": [
         { "value": "bundle", "label": "Reaching the bundle" },
-        { "value": "amount", "label": "Cart amount (theme settings > Cart > free shipping threshold)" },
+        { "value": "amount", "label": "Cart amount (free shipping threshold)" },
         { "value": "none", "label": "Hide free shipping status" }
       ],
       "default": "bundle"
@@ -838,12 +844,12 @@
       "label": "Image focus",
       "info": "Which part of the image stays visible in the portrait card. A focal point set on the image in Shopify overrides this.",
       "options": [
-        { "value": "50% 0%", "label": "Top" },
-        { "value": "50% 50%", "label": "Center" },
-        { "value": "50% 70%", "label": "Lower (knitwear)" },
-        { "value": "50% 100%", "label": "Bottom" }
+        { "value": "top", "label": "Top" },
+        { "value": "center", "label": "Center" },
+        { "value": "lower", "label": "Lower (knitwear)" },
+        { "value": "bottom", "label": "Bottom" }
       ],
-      "default": "50% 70%"
+      "default": "lower"
     },
     {
       "type": "color",
