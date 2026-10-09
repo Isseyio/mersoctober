@@ -23,8 +23,6 @@
     --cd-announcement-bg: {{ section.settings.announcement_background }};
     --cd-announcement-text: {{ section.settings.announcement_text_color }};
     --cd-progress-fill: {{ section.settings.progress_fill_color }};
-    --cd-badge-bg: {{ section.settings.save_badge_background }};
-    --cd-badge-text: {{ section.settings.save_badge_text_color }};
     --cd-checkout-bg: {{ section.settings.checkout_background }};
     --cd-checkout-text: {{ section.settings.checkout_text_color }};
     --cd-upsell-focus: {{ section.settings.upsell_image_focus | default: '50% 70%' }};
@@ -150,6 +148,17 @@
           assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_amount' | t: amount: cd_ship_left_money
       endcase
 
+      # Shipping cost shown in the footer (and added to the total) while free shipping is not unlocked
+      assign cd_ship_cost = 0
+      if section.settings.shipping_cost != blank
+        assign cd_ship_cost = section.settings.shipping_cost | remove: '€' | replace: ',', '.' | strip | times: 100 | round
+      endif
+
+      assign cd_ship_charge = 0
+      if cart.requires_shipping and cd_ship_unlocked == false
+        assign cd_ship_charge = cd_ship_cost
+      endif
+
       assign cd_show_ship_status = false
       if cart.requires_shipping
         if cd_ship_mode != 'none' or cd_ship_unlocked
@@ -175,10 +184,8 @@
       endfor
 
       assign cd_total_savings = 0
-      assign cd_saving_percent = 0
       if cd_original_total > cart.total_price
         assign cd_total_savings = cd_original_total | minus: cart.total_price
-        assign cd_saving_percent = cd_total_savings | times: 100.0 | divided_by: cd_original_total | round
       endif
 
       assign cd_discount_codes = cart.discount_applications | where: 'type', 'discount_code'
@@ -402,44 +409,31 @@
       <div class="v-stack gap-1">
         <div class="cd-totals">
           {%- if section.settings.show_savings_breakdown -%}
-            {%- if cd_total_savings > 0 -%}
-              <div class="cd-totals__row cd-totals__row--muted">
-                <p>{{ 'cart.general.subtotal' | t }}</p>
-                <p>{{ cd_original_total | money }}</p>
-              </div>
+            <div class="cd-totals__row cd-totals__row--muted">
+              <p>{{ 'cart.general.subtotal' | t }}</p>
+              <p>{{ cd_original_total | money }}</p>
+            </div>
 
-              {%- if cd_sale_savings > 0 -%}
-                <div class="cd-totals__row cd-totals__row--saving">
-                  <p>{{ 'cart.drawer.sale_savings' | t }}</p>
-                  <p>−{{ cd_sale_savings | money }}</p>
-                </div>
+            {%- if cd_sale_savings > 0 -%}
+              <div class="cd-totals__row cd-totals__row--saving">
+                <p>{{ 'cart.drawer.sale_savings' | t }}</p>
+                <p>−{{ cd_sale_savings | money }}</p>
+              </div>
+            {%- endif -%}
+
+            {%- for discount_application in cart.discount_applications -%}
+              {%- if discount_application.target_type == 'shipping_line' or discount_application.total_allocated_amount <= 0 -%}
+                {%- continue -%}
               {%- endif -%}
 
-              {%- for discount_application in cart.discount_applications -%}
-                {%- if discount_application.target_type == 'shipping_line' or discount_application.total_allocated_amount <= 0 -%}
-                  {%- continue -%}
-                {%- endif -%}
-
-                <div class="cd-totals__row cd-totals__row--saving">
-                  <p class="cd-totals__discount">
-                    {%- render 'icon' with 'discount', width: 12 -%}
-                    <span>{%- render 'cart-drawer-discount-label', discount_application: discount_application, section: section -%}</span>
-                  </p>
-                  <p>−{{ discount_application.total_allocated_amount | money }}</p>
-                </div>
-              {%- endfor -%}
-            {%- endif -%}
-
-            {%- if cart.requires_shipping -%}
-              <div class="cd-totals__row cd-totals__row--muted">
-                <p>{{ 'cart.drawer.shipping' | t }}</p>
-                {%- if cd_ship_unlocked -%}
-                  <p class="cd-totals__free">{{ 'cart.drawer.shipping_free' | t }}</p>
-                {%- else -%}
-                  <p>{{ 'cart.drawer.shipping_calculated' | t }}</p>
-                {%- endif -%}
+              <div class="cd-totals__row cd-totals__row--saving">
+                <p class="cd-totals__discount">
+                  {%- render 'icon' with 'discount', width: 12 -%}
+                  <span>{%- render 'cart-drawer-discount-label', discount_application: discount_application, section: section -%}</span>
+                </p>
+                <p>−{{ discount_application.total_allocated_amount | money }}</p>
               </div>
-            {%- endif -%}
+            {%- endfor -%}
           {%- elsif cd_original_total > cart.total_price -%}
             <div class="cd-totals__row cd-totals__row--subtotal">
               <p>{{ 'cart.general.subtotal' | t }}</p>
@@ -447,21 +441,29 @@
             </div>
           {%- endif -%}
 
+          {%- if cart.requires_shipping -%}
+            <div class="cd-totals__row cd-totals__row--muted">
+              <p>{{ 'cart.drawer.shipping' | t }}</p>
+              {%- if cd_ship_unlocked -%}
+                <p class="cd-totals__free">{{ 'cart.drawer.shipping_free' | t }}</p>
+              {%- elsif cd_ship_cost > 0 -%}
+                <p>{{ cd_ship_cost | money }}</p>
+              {%- else -%}
+                <p>{{ 'cart.drawer.shipping_calculated' | t }}</p>
+              {%- endif -%}
+            </div>
+          {%- endif -%}
+
           <div class="cd-totals__row cd-totals__row--total">
             <p>{{ 'cart.general.total' | t }}</p>
-
-            <p class="cd-totals__final">
-              {%- if cd_saving_percent > 0 and section.settings.save_badge_text != blank -%}
-                {%- assign cd_total_savings_money = cd_total_savings | money -%}
-                <span class="cd-save-badge">{{ section.settings.save_badge_text | escape | replace: '[percent]', cd_saving_percent | replace: '[amount]', cd_total_savings_money }}</span>
-              {%- endif -%}
-              <span>{{ cart.total_price | money }}</span>
-            </p>
+            <p class="cd-totals__final">{{ cart.total_price | plus: cd_ship_charge | money }}</p>
           </div>
 
           {%- if cd_total_savings > 0 -%}
-            {%- assign cd_total_savings_money = cd_total_savings | money -%}
-            <p class="cd-totals__savings">{{ 'cart.drawer.total_savings' | t: amount: cd_total_savings_money }}</p>
+            <div class="cd-totals__row cd-totals__row--saved">
+              <p>{{ 'cart.drawer.total_saved' | t }}</p>
+              <p>{{ cd_total_savings | money }}</p>
+            </div>
           {%- endif -%}
         </div>
 
@@ -740,6 +742,13 @@
       "default": "bundle"
     },
     {
+      "type": "text",
+      "id": "shipping_cost",
+      "label": "Standard shipping cost",
+      "info": "Shown in the footer and added to the total until free shipping is unlocked, e.g. 5.95. Leave empty to show \"Calculated at checkout\".",
+      "default": "5.95"
+    },
+    {
       "type": "header",
       "content": "Line items"
     },
@@ -851,30 +860,11 @@
       "content": "Footer"
     },
     {
-      "type": "text",
-      "id": "save_badge_text",
-      "label": "Saving badge",
-      "info": "Use [percent] and [amount]. Calculated from compare-at prices and the final total. Leave empty to hide.",
-      "default": "You saved [percent]%"
-    },
-    {
       "type": "checkbox",
       "id": "show_savings_breakdown",
       "label": "Show savings breakdown",
-      "info": "Lists the original subtotal, sale savings, each discount (bundle, codes) with its % or amount, and shipping.",
+      "info": "Lists the original subtotal, sale savings and each discount (bundle, codes) with its % or amount.",
       "default": true
-    },
-    {
-      "type": "color",
-      "id": "save_badge_background",
-      "label": "Saving badge background",
-      "default": "#000000"
-    },
-    {
-      "type": "color",
-      "id": "save_badge_text_color",
-      "label": "Saving badge text",
-      "default": "#ffffff"
     },
     {
       "type": "text",

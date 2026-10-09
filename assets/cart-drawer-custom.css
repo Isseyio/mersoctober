@@ -544,9 +544,9 @@
   font-weight: 500;
 }
 
-#cart-drawer .cd-totals__savings {
-  font-size: 12px;
-  text-align: end;
+#cart-drawer .cd-totals__row--saved {
+  font-size: 14px;
+  font-weight: 500;
   color: var(--cd-progress-fill);
 }
 
@@ -560,20 +560,9 @@
 }
 
 #cart-drawer .cd-totals__final {
-  display: flex;
-  align-items: center;
-  gap: 8px;
   font-size: 18px;
 }
 
-#cart-drawer .cd-save-badge {
-  padding: 3px 10px;
-  background: var(--cd-badge-bg);
-  color: var(--cd-badge-text);
-  font-size: 11px;
-  letter-spacing: .02em;
-  white-space: nowrap;
-}
 
 #cart-drawer .cd-buy-buttons {
   display: grid;

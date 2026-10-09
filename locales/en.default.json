@@ -360,7 +360,7 @@
       "shipping": "Shipping",
       "shipping_free": "Free",
       "shipping_calculated": "Calculated at checkout",
-      "total_savings": "You're saving {{ amount }} on this order"
+      "total_saved": "Total saved"
     },
     "free_shipping_bar": {
       "limit_unreached_html": "Spend {{ remaining_amount }} more and get free shipping!",
