@@ -357,7 +357,6 @@
       "free_shipping_remaining_amount": "You're {{ amount }} away from free shipping",
       "free_shipping_activated": "Free shipping activated",
       "free_shipping": "Free shipping",
-      "sale_savings": "Sale savings",
       "discount_code": "Code {{ code }}",
       "percent_off": "{{ percent }}% off",
       "percent_off_shipping": "{{ percent }}% off shipping",
@@ -365,7 +364,7 @@
       "shipping": "Shipping",
       "shipping_free": "Free",
       "shipping_calculated": "Calculated at checkout",
-      "total_saved": "Total saved"
+      "you_saved": "You saved {{ amount }}"
     },
     "free_shipping_bar": {
       "limit_unreached_html": "Išleiskite dar {{ remaining_amount }}, kad siuntimas būtų nemokamas!",

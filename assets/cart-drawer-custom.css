@@ -74,7 +74,7 @@
 /* Progress bar -------------------------------------------------------------------------------------------------- */
 #cart-drawer .cd-progress {
   display: grid;
-  gap: 8px;
+  gap: 10px;
 }
 
 #cart-drawer .cd-progress__row {
@@ -85,8 +85,24 @@
 }
 
 #cart-drawer .cd-progress__message {
+  display: flex;
+  align-items: center;
+  gap: 8px;
   font-size: 14px;
   line-height: 1.4;
+}
+
+#cart-drawer .cd-progress__message strong {
+  font-weight: 600;
+  color: var(--cd-progress-fill);
+}
+
+#cart-drawer .cd-progress.is-reached .cd-progress__message {
+  color: var(--cd-progress-fill);
+}
+
+#cart-drawer .cd-progress__check {
+  flex-shrink: 0;
 }
 
 #cart-drawer .cd-progress__count {
@@ -95,21 +111,22 @@
   color: var(--cd-muted);
 }
 
+/* One segment per knit, so "1 of 2" reads at a glance */
 #cart-drawer .cd-progress__bar {
-  position: relative;
-  height: 4px;
-  overflow: hidden;
-  border-radius: 4px;
-  background: var(--cd-progress-track, rgb(var(--text-color) / .1));
+  display: grid;
+  grid-template-columns: repeat(var(--cd-steps, 2), 1fr);
+  gap: 4px;
 }
 
-#cart-drawer .cd-progress__fill {
-  position: absolute;
-  inset-block: 0;
-  inset-inline-start: 0;
-  border-radius: inherit;
+#cart-drawer .cd-progress__step {
+  height: 8px;
+  border-radius: 8px;
+  background: var(--cd-progress-track, rgb(var(--text-color) / .1));
+  transition: background .3s ease;
+}
+
+#cart-drawer .cd-progress__step.is-filled {
   background: var(--cd-progress-fill);
-  transition: width .4s ease;
 }
 
 #cart-drawer .cd-shipping {
@@ -505,49 +522,13 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--spacing-3);
+  font-size: 14px;
 }
 
-#cart-drawer .cd-totals__row--subtotal {
-  font-size: 12px;
-  color: var(--cd-muted);
-}
-
-#cart-drawer .cd-totals__row--muted {
-  font-size: 13px;
-  color: var(--cd-muted);
-}
-
-#cart-drawer .cd-totals__row--saving {
-  font-size: 13px;
-  color: var(--cd-progress-fill);
-}
-
-#cart-drawer .cd-totals__row--saving > p:last-child,
-#cart-drawer .cd-totals__row--muted > p:last-child {
-  flex-shrink: 0;
-  white-space: nowrap;
-}
-
-#cart-drawer .cd-totals__discount {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 0;
-}
-
-#cart-drawer .cd-totals__discount svg {
-  flex-shrink: 0;
-}
 
 #cart-drawer .cd-totals__free {
   color: var(--cd-progress-fill);
   font-weight: 500;
-}
-
-#cart-drawer .cd-totals__row--saved {
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--cd-progress-fill);
 }
 
 #cart-drawer .cd-code-chip {
@@ -560,9 +541,18 @@
 }
 
 #cart-drawer .cd-totals__final {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   font-size: 18px;
 }
 
+#cart-drawer .cd-saved-pill {
+  padding: 4px 10px;
+  background: rgb(var(--text-color) / .1);
+  font-size: 12px;
+  white-space: nowrap;
+}
 
 #cart-drawer .cd-buy-buttons {
   display: grid;
@@ -594,7 +584,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #cart-drawer .cd-progress__fill,
+  #cart-drawer .cd-progress__step,
   #cart-drawer .cd-upsell__add,
   #cart-drawer .cd-checkout {
     transition: none;
