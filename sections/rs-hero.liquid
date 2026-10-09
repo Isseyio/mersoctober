@@ -1,0 +1,444 @@
+{% comment %}
+  RS Hero Shop Section
+  - Two-column hero: text column + media column
+  - Controls for height, spacing, media side, content position, and alignment
+  - Blocks: heading (richtext) with font-size controls; CTA with custom colors
+{% endcomment %}
+{%- assign full_width = full_width | default: section.settings.full_width, allow_false: true -%}
+{%- if full_width -%}
+{%- capture class -%}{{ class }} section-full{%- endcapture -%}
+{%- else -%}
+{%- capture class -%}{{ class }} section-boxed{%- endcapture -%}
+{%- endif -%}
+<style>
+    #shopify-section-{{ section.id }} {
+    --rs-hero-bg: {% if section.settings.background_gradient != blank %}{{ section.settings.background_gradient }}{% elsif section.settings.background != blank %}{{ section.settings.background }}{% else %}transparent{% endif %};
+    }
+  #shopify-section-{{ section.id }} .rs-hero {
+    position: relative;
+    display: grid;
+    grid-template-columns: var(--rs-hero-columns, 1fr 1fr);
+    gap: var(--rs-hero-gap, clamp(16px, 4vw, 40px));
+    background: var(--rs-hero-bg, transparent);
+    min-height: var(--rs-hero-min-h, auto);
+    padding-top: var(--rs-hero-pt, 0);
+    padding-bottom: var(--rs-hero-pb, 0);
+    margin-top: var(--rs-hero-mt, 0);
+    margin-bottom: var(--rs-hero-mb, 0);
+  }
+
+  #shopify-section-{{ section.id }} .rs-hero__inner {
+    max-width:  1400px;
+    margin-inline: auto;
+    display: contents; /* keep grid on root */
+  }
+
+  /* Text (content) column */
+  #shopify-section-{{ section.id }} .rs-hero__content {
+    padding-inline: clamp(12px, 3vw, 24px);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+  
+  #shopify-section-{{ section.id }} .rs-hero__badge {
+    display: flex;
+  }
+
+#shopify-section-{{ section.id }} a.button {
+        width: max-content;
+}  /* Media column */
+  #shopify-section-{{ section.id }} .rs-hero__media {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+  }
+  #shopify-section-{{ section.id }} .rs-hero__media .rs-hero__img {
+    object-fit: cover;
+    display: block;
+  }
+
+  /* Heading block (rich text) with per-block font controls */
+  #shopify-section-{{ section.id }} .rs-hero__heading {
+    margin: 0 0 0.6em 0;
+  }
+  @media (max-width: 699px) {
+    #shopify-section-{{ section.id }} .rs-hero__heading[data-mobile-size] {
+      font-size: attr(data-mobile-size px);
+      line-height: 1.15;
+    }
+  }
+  @media (min-width: 700px) {
+    #shopify-section-{{ section.id }} .rs-hero__heading[data-desktop-size] {
+      font-size: attr(data-desktop-size px);
+      line-height: 1.15;
+    }
+  }
+
+  /* CTA button */
+  #shopify-section-{{ section.id }} .rs-hero__cta {
+    --btn-bg: var(--btn-bg-color, transparent);
+    --btn-txt: var(--btn-text-color, currentColor);
+    --btn-bdr: var(--btn-border-color, currentColor);
+    display: inline-grid;
+    place-items: center;
+    padding: 0.9rem 1.4rem;
+    border-radius: 9999px;
+    border: 1.5px solid var(--btn-bdr);
+    background: var(--btn-bg);
+    color: var(--btn-txt);
+    text-decoration: none;
+    font-weight: 600;
+    transition: transform 0.15s ease, opacity 0.15s ease, box-shadow 0.15s ease;
+  }
+  #shopify-section-{{ section.id }} .rs-hero__cta:hover {
+    transform: translateY(-1px);
+  }
+  #shopify-section-{{ section.id }} .rs-hero__cta:active {
+    transform: translateY(0);
+  }
+
+  /* Stack on mobile */
+  @media (max-width: 699px) {
+    #shopify-section-{{ section.id }} .rs-hero {
+      grid-template-columns: 1fr;
+    }
+    #shopify-section-{{ section.id }} .rs-hero__media {
+      order: var(--rs-hero-media-order-mobile, 2);
+      height: var(--rs-hero-media-h-mobile, 48vh);
+    }
+    #shopify-section-{{ section.id }} .rs-hero__content {
+      order: var(--rs-hero-content-order-mobile, 1);
+    }
+  }
+</style>
+
+{%- liquid
+  assign bg = section.settings.background
+  assign bg_grad = section.settings.background_gradient
+
+  assign media_side = section.settings.media_side
+-%}
+
+<section
+  id="shopify-section-{{ section.id }}"
+  class="rs-hero {{ class }}"
+  style="
+    --rs-hero-columns: {% if section.settings.media_side == 'right' %}1fr 1fr{% else %}1fr 1fr{% endif %};
+    --rs-hero-bg: {% if bg_grad != blank %}{{ bg_grad }}{% elsif bg != blank %}{{ bg }}{% else %}transparent{% endif %};
+    --rs-hero-min-h: {{ section.settings.min_height_desktop }}vh;
+    --rs-hero-pt: {{ section.settings.padding_top }}px;
+    --rs-hero-pb: {{ section.settings.padding_bottom }}px;
+    --rs-hero-mt: {{ section.settings.margin_top }}px;
+    --rs-hero-mb: {{ section.settings.margin_bottom }}px;
+    --rs-hero-media-order-mobile: {% if section.settings.media_side == 'right' %}2{% else %}2{% endif %};
+    --rs-hero-content-order-mobile: 1;
+  "
+>
+  <div class="rs-hero__inner">
+    {%- comment -%}
+      Arrange columns based on media_side
+    {%- endcomment -%}
+    {%- if media_side == 'left' -%}
+      <div class="rs-hero__media" aria-hidden="true" style="height: 100%;">
+        {%- if section.settings.image != blank -%}
+          {%- capture sizes -%}(max-width: 699px) 100vw, 50vw{%- endcapture -%}
+          {{
+            section.settings.image
+            | image_url: width: section.settings.image.width
+            | image_tag:
+              loading: 'eager',
+              sizes: sizes,
+              widths: '400,600,800,1000,1200,1400,1600,2000',
+              class: 'rs-hero__img',
+              alt: section.settings.image_alt
+            | default: section.settings.heading_fallback
+          }}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+
+    <div class="rs-hero__content">
+      {%- for block in section.blocks -%}
+        {%- case block.type -%}
+        {%- when 'badge' -%}
+            {%- if block.settings.image != blank -%}
+              <div class="rs-hero__badge" {{ block.shopify_attributes }}>
+                {{ block.settings.image | image_url: width: block.settings.image.width | image_tag: class: 'rs-hero__badge-img' }}
+              </div>
+            {%- endif -%}
+          {%- when 'heading' -%}
+            {%- if block.settings.content != blank -%}
+              <div
+                class="rs-hero__heading "
+                style="color:{% if block.settings.text_color != blank %}{{ block.settings.text_color }}{% else %}inherit{% endif %};"
+                data-desktop-size="{{ block.settings.font_size_desktop }}"
+                data-mobile-size="{{ block.settings.font_size_mobile }}"
+                {{ block.shopify_attributes }}
+              >
+                {{ block.settings.content }}
+              </div>
+            {%- endif -%}
+
+          {%- when 'button' -%}
+            {%- if block.settings.text != blank -%}
+              <a
+                class="button button--xl button--outline button--secondary"
+                href="{{ block.settings.url }}"
+                style="
+                  --button-background-secondary: {{ block.settings.bg_color | default: 'transparent' }};
+                  --btn-text-color: {{ block.settings.text_color | default: 'currentColor' }};
+                  --btn-border-color: {{ block.settings.border_color | default: 'currentColor' }};
+                "
+                {{ block.shopify_attributes }}
+              >
+                {{ block.settings.text }}
+              </a>
+            {%- endif -%}
+        {%- endcase -%}
+      {%- endfor -%}
+    </div>
+
+    {%- if media_side == 'right' -%}
+      <div class="rs-hero__media" aria-hidden="true" style="height: 100%;">
+        {%- if section.settings.image != blank -%}
+          {%- capture sizes -%}(max-width: 699px) 100vw, 50vw{%- endcapture -%}
+          {{
+            section.settings.image
+            | image_url: width: section.settings.image.width
+            | image_tag:
+              loading: 'eager',
+              sizes: sizes,
+              widths: '400,600,800,1000,1200,1400,1600,2000',
+              class: 'rs-hero__img',
+              alt: section.settings.image_alt
+            | default: section.settings.heading_fallback
+          }}
+        {%- endif -%}
+      </div>
+    {%- endif -%}
+  </div>
+</section>
+
+<script>
+  (function () {
+    try {
+      var root = document.getElementById('shopify-section-{{ section.id }}');
+      if (!root) return;
+
+      /* Mobile-specific min-height */
+      var mql = window.matchMedia('(max-width: 699px)');
+      function applyMobileHeight() {
+        if (mql.matches) {
+          root.style.setProperty('--rs-hero-min-h', '{{ section.settings.min_height_mobile }}vh');
+        } else {
+          root.style.setProperty('--rs-hero-min-h', '{{ section.settings.min_height_desktop }}vh');
+        }
+      }
+      applyMobileHeight();
+      mql.addEventListener ? mql.addEventListener('change', applyMobileHeight) : mql.addListener(applyMobileHeight);
+    } catch (e) {}
+  })();
+</script>
+
+{% schema %}
+{
+  "name": "RS Hero (Shop)",
+  "class": "shopify-section--rs-hero",
+  "tag": "section",
+  "disabled_on": {
+    "groups": ["header", "custom.overlay"]
+  },
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "full_width",
+      "label": "Full width",
+      "default": true
+    },
+    { "type": "header", 
+    "content": "Layout & Media" 
+    },
+    {
+      "type": "select",
+      "id": "media_side",
+      "label": "Image position",
+      "options": [
+        { "value": "right", "label": "Right" },
+        { "value": "left", "label": "Left" }
+      ],
+      "default": "right"
+    },
+    {
+      "type": "image_picker",
+      "id": "image",
+      "label": "Hero image"
+    },
+    {
+      "type": "text",
+      "id": "image_alt",
+      "label": "Image alt text",
+      "info": "Improves accessibility & SEO"
+    },
+
+    { "type": "header",
+     "content": "Section size"
+    },
+    {
+      "type": "range",
+      "id": "min_height_desktop",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Min height (desktop)",
+      "default": 70
+    },
+    {
+      "type": "range",
+      "id": "min_height_mobile",
+      "min": 20,
+      "max": 100,
+      "step": 5,
+      "unit": "vh",
+      "label": "Min height (mobile)",
+      "default": 60
+    },
+
+    { "type": "header", "content": "Spacing" },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding top",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Padding bottom",
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "margin_top",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Margin top",
+      "default": 0
+    },
+    {
+      "type": "range",
+      "id": "margin_bottom",
+      "min": 0,
+      "max": 200,
+      "step": 4,
+      "unit": "px",
+      "label": "Margin bottom",
+      "default": 0
+    },
+    { "type": "header", 
+    "content": "Colors",
+    "info": "Gradient replaces solid colors when set."
+    },
+    {
+      "type": "color",
+      "id": "background",
+      "label": "Background"
+    },
+    {
+      "type": "color_background",
+      "id": "background_gradient",
+      "label": "Background gradient"
+    }
+  ],
+  "blocks": [
+    {
+        "type": "badge",
+        "name": "Badge",
+        "settings": [
+          {
+            "type": "image_picker",
+            "id": "image",
+            "label": "Image"
+          }
+        ]
+    },
+    {
+      "type": "heading",
+      "name": "Heading (richtext)",
+      "settings": [
+        {
+          "type": "richtext",
+          "id": "content",
+          "label": "Heading content",
+          "default": "<p>ENGINEERED FOR EVERYDAY ADVENTURES</p>"
+        },
+        {
+          "type": "range",
+          "id": "font_size_desktop",
+          "min": 18,
+          "max": 80,
+          "step": 1,
+          "unit": "px",
+          "label": "Font size (desktop)",
+          "default": 44
+        },
+        {
+          "type": "range",
+          "id": "font_size_mobile",
+          "min": 16,
+          "max": 48,
+          "step": 1,
+          "unit": "px",
+          "label": "Font size (mobile)",
+          "default": 28
+        },
+        {
+            "type": "color", 
+            "id": "text_color", 
+            "label": "Heading color",
+            "default": "#000"
+        }
+      ]
+    },
+    {
+      "type": "button",
+      "name": "CTA Button",
+      "settings": [
+        {
+             "type": "text",
+              "id": "text",
+               "label": "Text", 
+               "default": "Shop here" 
+        },
+        {
+             "type": "url",
+             "id": "url",
+             "label": "Link"
+          }
+        ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "RS Hero (Shop)",
+      "blocks": [
+      { "type": "heading" },
+      { "type": "button" }
+      ]
+    }
+  ]
+}
+{% endschema %}

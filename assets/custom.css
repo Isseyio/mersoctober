@@ -1,0 +1,208 @@
+.image-link-blocks__item-text {
+    font-size: 20px;
+}
+.line-item .badge {
+    justify-content: center;
+    background: #EDEBE8 !important;
+    color: #6e6c69ff;
+    font-size: 12px !important;
+    width: 145px !important;
+    padding: 5px;
+}
+/* TOTAL ROW */
+.drawer-total-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+
+}
+
+.total-title {
+  font-size: 14px;
+  margin: 0;
+}
+
+.drawer-total-right {
+  text-align: right;
+}
+.divappend2 {
+    width: 100%;
+}
+
+.drawer-total-right {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    gap: 6px;
+}
+.total-original {
+  margin: 0;
+  font-size: 14px;
+  color: #bbb;
+  text-decoration: line-through;
+}
+footer {
+    border-block-start: 0px solid rgb(var(--border-color)) !important;
+}
+.total-final {
+  margin: 0;
+  font-size: 13px;
+}
+
+/* Savings badge */
+.saving-badge {
+  background: #2ecc71;
+  color: white;
+  font-size: 12px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+/* SHIPPING */
+.shipping-row {
+  display: flex;
+  justify-content: space-between;
+}
+
+.ship-left {
+  font-size: 14px;
+}
+
+
+.custom-size-info {
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+#cart-progress-container { 
+}
+.cart #cart-progress-container {
+    width: 50%;
+    margin: 0 auto;
+}
+.cart-progress__text {
+    text-align: left;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+.cart-progress__bar {
+    position: relative;
+    height: 20px;
+    background: #dedede;
+    border-radius: 0px;
+  }
+  
+  .cart-progress__fill {
+    height: 100%;
+    background: black !important;
+    /*
+    background: linear-gradient(to right, #48c779, #2aa560);
+    */
+    width: 0;
+    border-radius: 0px;
+    transition: width .3s ease;
+  }
+  
+  .cart-progress__marker {
+    position: absolute;
+    bottom: -30px;                  /* tick & label above the bar */
+    transform: translateX(-50%); /* center on the computed pixel */
+    text-align: center;
+    pointer-events: none;        /* no accidental hovers/clicks */
+    z-index: 1;
+    font-size: 12px;
+  }
+  .cart-progress__marker:before {
+    content: '';
+    position: absolute;
+    background-color: #08A241;
+     width: 10px;
+    height: 30px;
+    top: -36px !important;
+    left: 36px;
+    transform: translate(-50%);
+    border-left: 3px solid #EEEEEE;
+    border-right: 3px solid #EEEEEE;
+  }
+  .cart-progress__marker span {
+  font-weight: 400;
+  }
+
+  .cart-progress {
+  width: 100%;
+  margin: 16px 0;
+}
+
+.cart-progress__text {
+  text-align: left;
+  margin-bottom: 40px;
+}
+
+/* BAR */
+.cart-progress__bar {
+  position: relative;
+  height: 10px;
+  background: #e5e5e5;
+  border-radius: 0x;
+}
+
+/* GREEN FILL */
+.cart-progress__fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  background: #305730;
+  border-radius: 0px;
+  transition: width 0.3s ease;
+}
+
+/* MARKERS */
+.cart-progress__marker {
+  position: absolute;
+  transform: translateX(-50%);
+  text-align: center;
+  font-size: 14px;
+  white-space: nowrap;
+  color: #000;
+}
+
+/* vertical divider */
+.cart-progress__marker::before {
+  content: '';
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 4px;
+  height: 28px;
+  background: #4da34d;
+  border-radius: 2px;
+}
+
+/* marker positions */
+.cart-progress__marker[data-items="1"] { left: 33.33%; }
+.cart-progress__marker[data-items="2"] { left: 66.66%; }
+.cart-progress__marker[data-items="3"] { left: 100%; }
+
+/* text below */
+.cart-progress__marker span {
+  font-weight: 700;
+}
+
+section#shopify-section-template--26429868605815__featured_collection_BidQ3h .rs-multibuy-price {
+    display: none;
+}
+
+.selectBoxCustom_container_d9387324 .selectBoxCustom_box_d9387324 .selectBoxCustom_placeholder_d9387324.selectBoxCustom_deActive_d9387324 {
+    color: #000000 !important;
+}
+div#trustpilot-widget-trustbox-0-wrapper {
+    display: none;
+}
+.template-suffix-bundle .rs-multibuy-price {
+    display: none;
+}
+.collection-bundles .rs-multibuy-price {
+    display: none;
+}

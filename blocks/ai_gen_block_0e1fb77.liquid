@@ -1,0 +1,266 @@
+{% doc %}
+  @prompt
+    Search input container 
+{% enddoc %}
+{% assign ai_gen_id = block.id | replace: '_', '' | downcase %}
+
+{% style %}
+  .ai-search-container-{{ ai_gen_id }} {
+    display: block;
+    width: {{ block.settings.desktop_width_percent }}%;
+    max-width: 100%;
+  }
+
+  .ai-search-wrapper-{{ ai_gen_id }} {
+    position: relative;
+    width: 100%;
+  }
+
+  .ai-search-input-{{ ai_gen_id }} {
+    width: 100%;
+    padding: {{ block.settings.input_padding }}px {{ block.settings.input_padding | times: 2.5 }}px;
+    padding-right: {{ block.settings.input_padding | times: 4 }}px;
+    font-size: {{ block.settings.font_size }}px;
+    border: {{ block.settings.border_width }}px solid {{ block.settings.border_color }};
+    border-radius: {{ block.settings.border_radius }}px;
+    background-color: {{ block.settings.background_color }};
+    color: {{ block.settings.text_color }};
+    outline: none;
+    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .ai-search-input-{{ ai_gen_id }}::placeholder {
+    color: {{ block.settings.placeholder_color }};
+    opacity: 0.7;
+  }
+
+  .ai-search-input-{{ ai_gen_id }}:focus {
+    border-color: {{ block.settings.focus_border_color }};
+    box-shadow: 0 0 0 3px {{ block.settings.focus_border_color | color_modify: 'alpha', 0.2 }};
+  }
+
+  .ai-search-icon-{{ ai_gen_id }} {
+    position: absolute;
+    right: {{ block.settings.input_padding }}px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: {{ block.settings.icon_size }}px;
+    height: {{ block.settings.icon_size }}px;
+    color: {{ block.settings.icon_color }};
+    pointer-events: none;
+  }
+
+  .ai-search-icon-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+  }
+
+  .ai-search-button-{{ ai_gen_id }} {
+    position: absolute;
+    right: {{ block.settings.input_padding }}px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    padding: 0;
+    cursor: pointer;
+    width: {{ block.settings.icon_size }}px;
+    height: {{ block.settings.icon_size }}px;
+    color: {{ block.settings.icon_color }};
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ai-search-button-{{ ai_gen_id }}:hover {
+    color: {{ block.settings.icon_hover_color }};
+  }
+
+  .ai-search-button-{{ ai_gen_id }} svg {
+    width: 100%;
+    height: 100%;
+  }
+{% endstyle %}
+
+<search-container-{{ ai_gen_id }}
+  class="ai-search-container-{{ ai_gen_id }}"
+  {{ block.shopify_attributes }}
+>
+  <form action="/search" method="get" role="search" class="ai-search-wrapper-{{ ai_gen_id }}">
+    <input
+      type="search"
+      name="q"
+      class="ai-search-input-{{ ai_gen_id }}"
+      placeholder="{{ block.settings.placeholder_text }}"
+      aria-label="{{ block.settings.placeholder_text }}"
+      autocomplete="off"
+    >
+    {% if block.settings.show_icon %}
+      {% if block.settings.icon_clickable %}
+        <button
+          type="submit"
+          class="ai-search-button-{{ ai_gen_id }}"
+          aria-label="Search"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </button>
+      {% else %}
+        <span class="ai-search-icon-{{ ai_gen_id }}" aria-hidden="true">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="11" cy="11" r="8"></circle>
+            <path d="m21 21-4.35-4.35"></path>
+          </svg>
+        </span>
+      {% endif %}
+    {% endif %}
+  </form>
+</search-container-{{ ai_gen_id }}>
+
+{% schema %}
+{
+  "name": "Search input",
+  "settings": [
+    {
+      "type": "header",
+      "content": "Content"
+    },
+    {
+      "type": "text",
+      "id": "placeholder_text",
+      "label": "Placeholder text",
+      "default": "Search products..."
+    },
+    {
+      "type": "range",
+      "id": "desktop_width_percent",
+      "label": "Desktop width",
+      "min": 50,
+      "max": 100,
+      "step": 5,
+      "unit": "%",
+      "default": 100
+    },
+    {
+      "type": "header",
+      "content": "Input style"
+    },
+    {
+      "type": "range",
+      "id": "font_size",
+      "label": "Font size",
+      "min": 12,
+      "max": 24,
+      "step": 1,
+      "unit": "px",
+      "default": 16
+    },
+    {
+      "type": "range",
+      "id": "input_padding",
+      "label": "Padding",
+      "min": 8,
+      "max": 24,
+      "step": 2,
+      "unit": "px",
+      "default": 12
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "min": 0,
+      "max": 50,
+      "step": 2,
+      "unit": "px",
+      "default": 8
+    },
+    {
+      "type": "range",
+      "id": "border_width",
+      "label": "Border width",
+      "min": 0,
+      "max": 4,
+      "step": 1,
+      "unit": "px",
+      "default": 1
+    },
+    {
+      "type": "color",
+      "id": "background_color",
+      "label": "Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "color",
+      "id": "placeholder_color",
+      "label": "Placeholder",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "border_color",
+      "label": "Border",
+      "default": "#cccccc"
+    },
+    {
+      "type": "color",
+      "id": "focus_border_color",
+      "label": "Focus border",
+      "default": "#1a1a1a"
+    },
+    {
+      "type": "header",
+      "content": "Search icon"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_icon",
+      "label": "Show search icon",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "icon_clickable",
+      "label": "Make icon clickable",
+      "info": "When enabled, clicking the icon submits the search",
+      "default": false
+    },
+    {
+      "type": "range",
+      "id": "icon_size",
+      "label": "Icon size",
+      "min": 16,
+      "max": 32,
+      "step": 2,
+      "unit": "px",
+      "default": 20
+    },
+    {
+      "type": "color",
+      "id": "icon_color",
+      "label": "Icon color",
+      "default": "#666666"
+    },
+    {
+      "type": "color",
+      "id": "icon_hover_color",
+      "label": "Icon hover color",
+      "default": "#1a1a1a"
+    }
+  ],
+  "presets": [
+    {
+      "name": "Search input"
+    }
+  ]
+}
+{% endschema %}

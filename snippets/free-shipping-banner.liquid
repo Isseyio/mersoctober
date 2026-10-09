@@ -1,0 +1,46 @@
+{% comment %}
+------------------------------------------------------------
+Free Shipping Banner Snippet
+------------------------------------------------------------
+Settings:
+- text: customizable free shipping text
+Example include:
+  {% render 'free-shipping-banner', text: 'Free shipping to Netherlands' %}
+------------------------------------------------------------
+{% endcomment %}
+
+<style>
+.free-shipping-banner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #f9f9f9;
+  border: 2px solid #3a8cff;
+  border-radius: 14px;
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #000;
+  width: fit-content;
+  margin: 0 auto;
+}
+
+.free-shipping-banner img {
+  width: 24px;
+  height: auto;
+}
+
+.free-shipping-banner strong {
+  font-weight: 600;
+  text-decoration: underline;
+}
+</style>
+
+<div class="free-shipping-banner">
+  <img 
+    src="https://flagcdn.com/{{ localization.country.iso_code | downcase }}.svg"
+    alt="{{ localization.country.name }} flag"
+  />
+  <span>{{ text | default: "Free shipping to " }}<strong>{{ localization.country.name }}</strong></span>
+</div>

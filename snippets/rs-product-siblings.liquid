@@ -1,0 +1,111 @@
+{% assign product_siblings = product.metafields.custom.product_siblings.value %}
+{% if product_siblings != blank %}
+  <div class="product-siblings">
+    <h2 class="product-siblings__title">
+      {{ block.settings.title }}
+      <span class="product-siblings__active"></span>
+    </h2>
+
+    <div class="product-siblings__list">
+      {% for sibling_product in product_siblings %}
+        {% assign product_title_parts = sibling_product.title | split: ' - ' %}
+        {% assign product_suffix = product_title_parts.last %}
+
+        <div class="product-siblings__item">
+          <a 
+            data-title="{{ product_suffix }}"
+            href="{{ sibling_product.url }}" 
+            class="product-siblings__item-link {% if sibling_product.id == product.id %}is-active{% endif %}">
+            {% assign third_image = sibling_product.media[2] %}
+            {% if third_image != blank %}
+              <img 
+                src="{{ third_image | image_url: width: 200 }}"
+                alt="{{ sibling_product.title }}">
+            {% endif %}
+          </a>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const siblingsContainer = document.querySelector('.product-siblings');
+      if (!siblingsContainer) return;
+
+      const activeLink = siblingsContainer.querySelector('.product-siblings__item-link.is-active');
+      const titleSpan = siblingsContainer.querySelector('.product-siblings__active');
+      const allLinks = siblingsContainer.querySelectorAll('.product-siblings__item-link');
+
+      if (activeLink && titleSpan) {
+        const activeTitle = activeLink.dataset.title || '';
+        titleSpan.textContent = activeTitle;
+        
+        allLinks.forEach(link => {
+          link.addEventListener('mouseenter', () => {
+            titleSpan.textContent = link.dataset.title || '';
+          });
+          link.addEventListener('mouseleave', () => {
+            titleSpan.textContent = activeTitle;
+          });
+        });
+      }
+    });
+  </script>
+
+  <style>
+.product-siblings {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.product-siblings__title {
+  font-size: var(--text-base);
+  color: rgb(var(--text-color) / .7);
+}
+
+.product-siblings__title span {
+  margin-left: 2px;
+  transition: color 0.2s ease;
+}
+
+.product-siblings__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-top: 12px;
+}
+
+.product-siblings__item {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.product-siblings__item-link {
+  position: relative;
+  display: block;
+  overflow: hidden;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: #f3f3f3;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.product-siblings__item-link:hover,
+.product-siblings__item-link.is-active {
+  border-color: #000;
+  transform: translateY(-2px);
+}
+
+.product-siblings__item-link img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 0%;
+}
+  </style>
+{% endif %}

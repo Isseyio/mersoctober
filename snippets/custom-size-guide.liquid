@@ -1,0 +1,286 @@
+{% assign size_guide_references = product.metafields.custom.size_guide_reference.value %}
+{% if size_guide_references != blank %}
+  <div class="product-info__size-guide" style="margin-top: -20px;">
+    <div class="size-guide-title">
+        <a href="#" class="size-guide-trigger" onclick="openSizeGuideModal(event)">Size Guide & Fit
+        </a>
+    </div>
+  </div>
+
+  <!-- Size Guide Modal -->
+  <div id="sizeGuideModal" class="size-guide-modal" onclick="closeSizeGuideModalOnOverlay(event)">
+    <div class="size-guide-modal-content">
+      <div class="size-guide-modal-header">
+        <h2 class="size-guide-modal-title">Size Guide</h2>
+        <button class="size-guide-modal-close" onclick="closeSizeGuideModal()">&times;</button>
+      </div>
+      
+      <div class="size-guide-tabs">
+        <button class="size-guide-tab active" onclick="switchSizeGuideTab(event, 'cm')">CM</button>
+        <button class="size-guide-tab" onclick="switchSizeGuideTab(event, 'inches')">Inches</button>
+      </div>
+
+      <div class="size-guide-tab-content">
+        {% for size_guide_reference in size_guide_references %}
+          <!-- Inches Tab Content -->
+          <div id="inches-content" class="size-guide-content">
+            {% if size_guide_reference.size_guide_mobile_in != blank %}
+              <img 
+                class="size-guide-image size-guide-mobile" 
+                src="{{ size_guide_reference.size_guide_mobile_in | image_url: width: 800 }}" 
+                alt="Size Guide - Inches (Mobile)"
+                width=""
+                height=""
+              >
+            {% endif %}
+            {% if size_guide_reference.size_guide_desktop_in != blank %}
+              <img 
+                class="size-guide-image size-guide-desktop" 
+                src="{{ size_guide_reference.size_guide_desktop_in | image_url: width: 1200 }}" 
+                alt="Size Guide - Inches"
+                width=""
+                height=""
+              >
+            {% endif %}
+          </div>
+
+          <!-- CM Tab Content -->
+          <div id="cm-content" class="size-guide-content active">
+            {% if size_guide_reference.size_guide_mobile_cm != blank %}
+              <img 
+                class="size-guide-image size-guide-mobile" 
+                src="{{ size_guide_reference.size_guide_mobile_cm | image_url: width: 800 }}" 
+                alt="Size Guide - CM (Mobile)"
+                width=""
+                height=""
+              >
+            {% endif %}
+            {% if size_guide_reference.size_guide_desktop_cm != blank %}
+              <img 
+                class="size-guide-image size-guide-desktop" 
+                src="{{ size_guide_reference.size_guide_desktop_cm | image_url: width: 1200 }}" 
+                alt="Size Guide - CM"
+                width=""
+                height=""
+              >
+            {% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    </div>
+  </div>
+
+  <style>
+    .size-guide-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      overflow: auto;
+    }
+
+    .size-guide-modal.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .size-guide-modal-content {
+      background-color: #fff;
+      margin: 2rem auto;
+      padding: 0;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 900px;
+      max-height: 90vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .size-guide-modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.5rem 2rem;
+      border-bottom: 1px solid #e5e5e5;
+    }
+
+    .size-guide-modal-title {
+      margin: 0;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    .size-guide-trigger {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      justify-content: end;
+    }
+
+    .size-guide-modal-close {
+      background: none;
+      border: none;
+      font-size: 2rem;
+      cursor: pointer;
+      color: #666;
+      line-height: 1;
+      padding: 0;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .size-guide-modal-close:hover {
+      color: #000;
+    }
+
+    .size-guide-tabs {
+      display: flex;
+      gap: 0;
+      border-bottom: 1px solid #e5e5e5;
+      padding: 0 2rem;
+    }
+
+    .size-guide-tab {
+      background: none;
+      border: none;
+      padding: 1rem 2rem;
+      cursor: pointer;
+      font-size: 1rem;
+      color: #666;
+      border-bottom: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .size-guide-tab:hover {
+      color: #000;
+    }
+
+    .size-guide-tab.active {
+      color: #000;
+      border-bottom-color: #000;
+      font-weight: 600;
+    }
+
+    .size-guide-tab-content {
+      padding: 2rem;
+      overflow-y: auto;
+      flex: 1;
+    }
+
+    .size-guide-content {
+      display: none;
+      text-align: center;
+    }
+
+    .size-guide-content.active {
+      display: block;
+    }
+
+    .size-guide-image {
+      max-width: 100%;
+      height: auto;
+      border-radius: 4px;
+    }
+
+    .size-guide-mobile {
+      display: block;
+    }
+
+    .size-guide-desktop {
+      display: none;
+    }
+
+    @media (min-width: 768px) {
+      .size-guide-mobile {
+        display: none;
+      }
+
+      .size-guide-desktop {
+        display: block;
+      }
+    }
+
+    @media (max-width: 767px) {
+      .size-guide-modal-content {
+        width: 95%;
+        margin: 1rem auto;
+      }
+
+      .size-guide-modal-header {
+        padding: 1rem 1.5rem;
+      }
+
+      .size-guide-modal-title {
+        font-size: 1.25rem;
+      }
+
+      .size-guide-tabs {
+        padding: 0 1rem;
+      }
+
+      .size-guide-tab {
+        padding: 0.75rem 1rem;
+        font-size: 0.9rem;
+      }
+
+      .size-guide-tab-content {
+        padding: 1.5rem 1rem;
+      }
+    }
+  </style>
+
+  <script>
+    function openSizeGuideModal(event) {
+      event.preventDefault();
+      document.getElementById('sizeGuideModal').classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeSizeGuideModal() {
+      document.getElementById('sizeGuideModal').classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
+    function closeSizeGuideModalOnOverlay(event) {
+      if (event.target.id === 'sizeGuideModal') {
+        closeSizeGuideModal();
+      }
+    }
+
+    function switchSizeGuideTab(event, unit) {
+      event.preventDefault();
+      
+      // Remove active class from all tabs
+      const tabs = document.querySelectorAll('.size-guide-tab');
+      tabs.forEach(tab => tab.classList.remove('active'));
+      
+      // Add active class to clicked tab
+      event.currentTarget.classList.add('active');
+      
+      // Hide all content
+      const contents = document.querySelectorAll('.size-guide-content');
+      contents.forEach(content => content.classList.remove('active'));
+      
+      // Show selected content
+      const selectedContent = document.getElementById(unit + '-content');
+      if (selectedContent) {
+        selectedContent.classList.add('active');
+      }
+    }
+
+    // Close modal on ESC key
+    document.addEventListener('keydown', function(event) {
+      if (event.key === 'Escape') {
+        closeSizeGuideModal();
+      }
+    });
+  </script>
+{% endif %}

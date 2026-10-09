@@ -1,0 +1,211 @@
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "sections": {
+    "main": {
+      "type": "main-page",
+      "disabled": true,
+      "settings": {
+        "content_width": "80ch"
+      }
+    },
+    "image_with_text_overlay_HajGpi": {
+      "type": "image-with-text-overlay",
+      "blocks": {
+        "heading_XKyKV9": {
+          "type": "heading",
+          "settings": {
+            "text": "Customer Care",
+            "heading_tag": "h3"
+          }
+        }
+      },
+      "block_order": [
+        "heading_XKyKV9"
+      ],
+      "name": "Image with text overlay",
+      "settings": {
+        "full_width": true,
+        "allow_transparent_header": false,
+        "enable_parallax": false,
+        "image_size": "sm",
+        "image": "shopify://shop_images/s-blob-v1-IMAGE-r87RDzYtmN8.png",
+        "mobile_text_position": "place-self-end-center text-center",
+        "desktop_text_position": "sm:place-self-end-center sm:text-center",
+        "text_color": "#ffffff",
+        "overlay_color": "#000000",
+        "overlay_opacity": 0
+      }
+    },
+    "rich_text_MRgYDx": {
+      "type": "rich-text",
+      "blocks": {
+        "richtext_NwmJhc": {
+          "type": "richtext",
+          "settings": {
+            "content": "<p>Our Customer Care Team will be pleased to assist you.</p><p>If you have any questions or need assistance, we recommend visiting our <a href=\"/pages/faq\" title=\"FAQ\">FAQ section </a>first.</p><p>If you still need help, feel free to choose your preferred contact method. Available <strong>Monday to Friday, from 9 AM to 6 PM (CET)</strong>, excluding public holidays.</p>"
+          }
+        }
+      },
+      "block_order": [
+        "richtext_NwmJhc"
+      ],
+      "name": "Rich text",
+      "settings": {
+        "full_width": true,
+        "content_width": "small",
+        "text_position": "start",
+        "background": "",
+        "background_gradient": "",
+        "text_color": ""
+      }
+    },
+    "accordion_content_CiTRr6": {
+      "type": "accordion-content",
+      "blocks": {
+        "item_RdFhta": {
+          "type": "item",
+          "settings": {
+            "icon": "none",
+            "icon_width": 20,
+            "title": "Shipping",
+            "content": "<p>We offer free shipping over orders containing 2+ knits. Otherwise standard EU shipping is equal to 5.95EUR.</p><p>Based on location, orders vary in their delivery times spanning from next day delivery up to 7 business days. </p>",
+            "page": ""
+          }
+        },
+        "item_yYjGy4": {
+          "type": "item",
+          "settings": {
+            "icon": "none",
+            "icon_width": 20,
+            "title": "Returns",
+            "content": "<p>We offer returns within 30 days of delivery. Items must be unworn, unwashed and with all tags attached. Once we receive your return, we'll process a full refund to your original payment method within 3-5 business days. </p>",
+            "page": ""
+          }
+        }
+      },
+      "block_order": [
+        "item_RdFhta",
+        "item_yYjGy4"
+      ],
+      "name": "Accordion content",
+      "settings": {
+        "full_width": false,
+        "subheading": "",
+        "title": "",
+        "content": "<h4>Answers to your questions.</h4><p>If you have any questions or need assistance, we recommend visiting our FAQ section first.</p>",
+        "button_text": "",
+        "button_url": "",
+        "text_position": "start",
+        "background": "#edebe8",
+        "background_gradient": "",
+        "text_color": "",
+        "heading_color": "",
+        "heading_gradient": "",
+        "button_background": "",
+        "button_text_color": "",
+        "accordion_background": "#ffffff",
+        "accordion_text_color": ""
+      }
+    },
+    "multi_column_KWjcpe": {
+      "type": "multi-column",
+      "blocks": {
+        "item_999QR6": {
+          "type": "item",
+          "settings": {
+            "show_controls": false,
+            "column_size": "3",
+            "title": "",
+            "heading_tag": "h4",
+            "content": "<p><strong>Let's Partner Up</strong></p><p>Looking to feature Merso in your store or co-design a capsule collection? Tell us how we can work together: partnerships@merso.com</p><p></p>",
+            "link_url": "",
+            "link_text": "",
+            "link_style": "link"
+          }
+        },
+        "item_m8LPaE": {
+          "type": "item",
+          "settings": {
+            "show_controls": false,
+            "column_size": "3",
+            "title": "",
+            "heading_tag": "h4",
+            "content": "<p>Join the Merso Ambassador Program</p><p>Love your Merso sweater and want to share it with your followers? Reach out to collaborate with us: ambassadors@merso.com</p>",
+            "link_url": "",
+            "link_text": "",
+            "link_style": "link"
+          }
+        },
+        "item_NTGNC4": {
+          "type": "item",
+          "settings": {
+            "show_controls": false,
+            "column_size": "3",
+            "title": "",
+            "heading_tag": "h4",
+            "content": "<p><strong>Press & Media Inquiries</strong></p><p>Writing a story or review about Merso? We’re all ears! Drop us a line at: press@merso.com</p>",
+            "link_url": "",
+            "link_text": "",
+            "link_style": "link"
+          }
+        }
+      },
+      "block_order": [
+        "item_999QR6",
+        "item_m8LPaE",
+        "item_NTGNC4"
+      ],
+      "disabled": true,
+      "name": "Multi-column",
+      "settings": {
+        "full_width": true,
+        "stack_on_mobile": false,
+        "gap": "medium",
+        "text_alignment": "start",
+        "subheading": "",
+        "title": "",
+        "content": "",
+        "background": "#ffffff",
+        "background_gradient": "",
+        "text_color": ""
+      }
+    },
+    "contact_wcEgrq": {
+      "type": "contact",
+      "name": "Contact form",
+      "settings": {
+        "full_width": true,
+        "subheading": "",
+        "title": "Contact us",
+        "content": "",
+        "text_position": "start",
+        "contact_form_size": "large",
+        "background": "",
+        "background_gradient": "",
+        "text_color": "",
+        "heading_color": "",
+        "heading_gradient": "",
+        "contact_background": "",
+        "contact_text_color": "",
+        "button_background": "",
+        "button_text_color": ""
+      }
+    }
+  },
+  "order": [
+    "main",
+    "image_with_text_overlay_HajGpi",
+    "rich_text_MRgYDx",
+    "accordion_content_CiTRr6",
+    "multi_column_KWjcpe",
+    "contact_wcEgrq"
+  ]
+}

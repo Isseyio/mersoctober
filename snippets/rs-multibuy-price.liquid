@@ -1,0 +1,50 @@
+{% comment %}
+----------------------------------------------------------------------------------------------------------------------
+RS MULTIBUY PRICE SNIPPET
+----------------------------------------------------------------------------------------------------------------------
+Displays the 35% multibuy discounted price for a given product automatically.
+Works with the product’s compare at price (falling back to current price if none exists), in the active store currency.
+----------------------------------------------------------------------------------------------------------------------
+Usage:
+{% render 'rs-multibuy-price', product: product %}
+----------------------------------------------------------------------------------------------------------------------
+{% endcomment %}
+
+{% assign base_variant = product.selected_or_first_available_variant %}
+{% assign base_price = base_variant.price | default: product.price %}
+{% assign compare_price = base_variant.compare_at_price | default: product.compare_at_price %}
+
+{% comment %} Use compare_at_price if it exists, otherwise fall back to regular price {% endcomment %}
+{% assign target_price = base_price | default: base_price %}
+
+{% assign multibuy_price = target_price | times: 0.64 %}
+
+{% if target_price > 0 %}
+  <div class="rs-multibuy-price">
+    {% if settings.currency_code_enabled %}
+      <span class="rs-multibuy-price__amount">{{ multibuy_price | money_with_currency }}</span>
+    {% else %}
+      <span class="rs-multibuy-price__amount">{{ multibuy_price | money }}</span>
+    {% endif %}
+    <span class="rs-multibuy-price__label">Multibuy</span>
+  </div>
+{% endif %}
+
+<style>
+  .rs-multibuy-price {
+    font-size: 12px !important;
+    font-weight: 500;
+    color: #2E8B57;
+    margin-top: 4px;
+  }
+
+  .rs-multibuy-price__amount {
+    color: #2E8B57;
+    font-weight: 600;
+  }
+
+  .rs-multibuy-price__label {
+    color: #2E8B57;
+    margin-left: 4px;
+  }
+</style>

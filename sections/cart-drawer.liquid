@@ -1,0 +1,753 @@
+{%- comment -%}
+  When the drawer asks Shopify for product recommendations, this same section is rendered through the
+  /recommendations/products endpoint: only the upsell cards are returned in that case.
+{%- endcomment -%}
+{%- if recommendations.performed -%}
+  <div data-cd-recs-result>
+    {%- assign cd_rendered = 0 -%}
+    {%- for recommended_product in recommendations.products -%}
+      {%- assign in_cart = cart | line_items_for: recommended_product -%}
+      {%- if in_cart.size > 0 or recommended_product.available == false -%}{%- continue -%}{%- endif -%}
+      {%- render 'cart-drawer-upsell-card', product: recommended_product, section: section -%}
+      {%- assign cd_rendered = cd_rendered | plus: 1 -%}
+      {%- if cd_rendered >= section.settings.upsell_limit -%}{%- break -%}{%- endif -%}
+    {%- endfor -%}
+  </div>
+{%- else -%}
+
+{{- 'cart-drawer-custom.css' | asset_url | stylesheet_tag -}}
+<script src="{{ 'cart-drawer-custom.js' | asset_url }}" defer></script>
+
+<style>
+  #cart-drawer {
+    --cd-announcement-bg: {{ section.settings.announcement_background }};
+    --cd-announcement-text: {{ section.settings.announcement_text_color }};
+    --cd-progress-fill: {{ section.settings.progress_fill_color }};
+    --cd-badge-bg: {{ section.settings.save_badge_background }};
+    --cd-badge-text: {{ section.settings.save_badge_text_color }};
+    --cd-checkout-bg: {{ section.settings.checkout_background }};
+    --cd-checkout-text: {{ section.settings.checkout_text_color }};
+    {%- if section.settings.product_card_background != blank and section.settings.product_card_background != 'rgba(0,0,0,0)' %}
+    --cd-card-bg: {{ section.settings.product_card_background }};
+    {%- endif %}
+    {%- if section.settings.product_card_text_color != blank and section.settings.product_card_text_color != 'rgba(0,0,0,0)' %}
+    --cd-card-text: {{ section.settings.product_card_text_color }};
+    {%- endif %}
+  }
+</style>
+
+<cart-drawer {% if request.design_mode %}handle-section-events{% endif %} class="cart-drawer drawer drawer--lg" id="cart-drawer">
+  {%- if cart.item_count == 0 -%}
+    <button is="close-button" aria-label="{{ 'general.accessibility.close' | t | escape }}">
+      {%- render 'icon' with 'close' -%}
+    </button>
+
+    <div class="empty-state align-self-center">
+      <div class="empty-state__icon-wrapper">
+        {%- render 'icon' with 'cart', width: 32, height: 32, stroke_width: 1 -%}
+        <span class="count-bubble count-bubble--lg">0</span>
+      </div>
+
+      <div class="prose">
+        <p class="h5">{{ 'cart.general.empty' | t }}</p>
+
+        {%- assign button_content = 'cart.general.continue_shopping' | t -%}
+        {%- render 'button', href: settings.cart_empty_button_link, size: 'xl', content: button_content -%}
+      </div>
+    </div>
+  {%- else -%}
+    {%- liquid
+      # ------------------------------------------------------------------------------------------------------------
+      # Bundle progress: count the qualifying items (knits) in the cart
+      # ------------------------------------------------------------------------------------------------------------
+      assign cd_threshold = section.settings.bundle_threshold
+      assign cd_match_terms = section.settings.bundle_match | downcase | split: ','
+      assign cd_bundle_count = 0
+
+      for item in cart.items
+        assign qualifies = true
+
+        if section.settings.bundle_match != blank
+          assign qualifies = false
+          assign item_type = item.product.type | downcase
+
+          for term in cd_match_terms
+            assign term_clean = term | strip
+            if term_clean == blank
+              continue
+            endif
+
+            if item_type contains term_clean
+              assign qualifies = true
+            endif
+
+            for tag in item.product.tags
+              assign tag_clean = tag | downcase | strip
+              if tag_clean == term_clean
+                assign qualifies = true
+              endif
+            endfor
+          endfor
+        endif
+
+        if qualifies
+          assign cd_bundle_count = cd_bundle_count | plus: item.quantity
+        endif
+      endfor
+
+      assign cd_bundle_reached = false
+      if cd_bundle_count >= cd_threshold
+        assign cd_bundle_reached = true
+      endif
+
+      assign cd_remaining = cd_threshold | minus: cd_bundle_count | at_least: 0
+      assign cd_progress = cd_bundle_count | times: 100 | divided_by: cd_threshold | at_most: 100
+
+      if cd_remaining == 1
+        assign cd_remaining_unit = section.settings.bundle_unit_singular
+      else
+        assign cd_remaining_unit = section.settings.bundle_unit_plural
+      endif
+
+      assign cd_count_label = cd_bundle_count | append: ' / ' | append: cd_threshold | append: ' ' | append: section.settings.bundle_unit_plural
+
+      if cd_bundle_reached
+        assign cd_message = section.settings.bundle_reached_message
+      else
+        assign cd_message = section.settings.bundle_unreached_message | replace: '[remaining]', cd_remaining | replace: '[units]', cd_remaining_unit | replace: '[discount]', section.settings.bundle_discount_percent
+      endif
+
+      # ------------------------------------------------------------------------------------------------------------
+      # Footer totals: original value (compare-at prices), final total (after Shopify discounts) and saving %
+      # ------------------------------------------------------------------------------------------------------------
+      assign cd_original_total = 0
+
+      for item in cart.items
+        assign unit_original = item.original_price
+        if item.variant.compare_at_price > item.original_price
+          assign unit_original = item.variant.compare_at_price
+        endif
+        assign line_original = unit_original | times: item.quantity
+        assign cd_original_total = cd_original_total | plus: line_original
+      endfor
+
+      assign cd_saving_percent = 0
+      if cd_original_total > cart.total_price
+        assign cd_saving_percent = cd_original_total | minus: cart.total_price | times: 100.0 | divided_by: cd_original_total | round
+      endif
+
+    -%}
+
+    <div class="cart-drawer__inner cd-inner">
+      {%- if section.settings.announcement_text != blank -%}
+        <div class="cd-announcement">
+          <p>{{ section.settings.announcement_text | escape }}</p>
+        </div>
+      {%- endif -%}
+
+      <div class="cart-drawer__top cd-top">
+        <div class="cd-header">
+          <p class="cd-header__title" id="cart-drawer-title">
+            {{- section.settings.drawer_title | escape }} (<cart-count>{{ cart.item_count }}</cart-count>)
+          </p>
+
+          <button type="button" is="close-button" class="drawer__close-icon cd-header__close">
+            <span class="sr-only">{{ 'general.accessibility.close' | t }}</span>
+            {%- render 'icon' with 'close' -%}
+          </button>
+        </div>
+
+        {%- if section.settings.show_bundle_progress -%}
+          <div class="cd-progress {% if cd_bundle_reached %}is-reached{% endif %}">
+            <div class="cd-progress__row">
+              <p class="cd-progress__message" aria-live="polite">{{ cd_message }}</p>
+              <p class="cd-progress__count">{{ cd_count_label }}</p>
+            </div>
+
+            <div
+              class="cd-progress__bar"
+              role="progressbar"
+              aria-label="{{ section.settings.bundle_unit_plural | escape }}"
+              aria-valuemin="0"
+              aria-valuemax="{{ cd_threshold }}"
+              aria-valuenow="{{ cd_bundle_count | at_most: cd_threshold }}"
+              aria-valuetext="{{ cd_count_label | escape }}"
+            >
+              <span class="cd-progress__fill" style="width: {{ cd_progress }}%"></span>
+            </div>
+
+            {%- if cd_bundle_reached and section.settings.bundle_reached_submessage != blank -%}
+              <p class="cd-progress__sub">
+                <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 12 12"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {{ section.settings.bundle_reached_submessage | escape }}
+              </p>
+            {%- endif -%}
+          </div>
+        {%- elsif settings.cart_show_free_shipping_threshold -%}
+          {%- render 'free-shipping-bar' -%}
+        {%- endif -%}
+      </div>
+
+      {%- if section.settings.show_cart_timer -%}
+        <div id="cart-timer-bar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #f5f0eb; margin-bottom: 20px; padding: 8px 12px; font-size: 13px;">
+          <span>Your cart is reserved for <strong id="cart-countdown">10:00</strong></span>
+        </div>
+      {%- endif -%}
+
+      <div class="cd-body">
+        <div class="cart-drawer__line-items cd-lines">
+          {%- for line_item in cart.items -%}
+            {%- render 'cart-drawer-line-item', line_item: line_item, index: forloop.index, section: section -%}
+          {%- endfor -%}
+        </div>
+
+        {%- liquid
+          # ------------------------------------------------------------------------------------------------------------
+          # "Finish bundle deal" upsell
+          # ------------------------------------------------------------------------------------------------------------
+          assign cd_upsell_source = section.settings.upsell_source
+          assign cd_upsell_rendered = 0
+          assign cd_carousel_id = section.id | append: '-cd-upsell'
+
+          case cd_upsell_source
+            when 'collection'
+              assign cd_upsell_products = section.settings.upsell_collection.products
+            when 'manual'
+              assign cd_upsell_products = section.settings.products
+            else
+              assign cd_upsell_products = nil
+          endcase
+
+          capture cd_upsell_cards
+            if cd_upsell_source == 'related' or cd_upsell_source == 'complementary'
+              assign cd_in_cart_ids = cart.items | map: 'product_id' | uniq | join: ','
+              echo '<cart-drawer-recommendations class="cd-upsell__recs" section-id="' | append: section.id | append: '" product-id="' | append: cart.items.first.product_id | append: '" limit="' | append: section.settings.upsell_limit | append: '" intent="' | append: cd_upsell_source | append: '" exclude="' | append: cd_in_cart_ids | append: '"></cart-drawer-recommendations>'
+              assign cd_upsell_rendered = 1
+            else
+              for upsell_product in cd_upsell_products
+                assign in_cart = cart | line_items_for: upsell_product
+                if in_cart.size > 0 or upsell_product.available == false
+                  continue
+                endif
+
+                render 'cart-drawer-upsell-card', product: upsell_product, section: section
+                assign cd_upsell_rendered = cd_upsell_rendered | plus: 1
+
+                if cd_upsell_rendered >= section.settings.upsell_limit
+                  break
+                endif
+              endfor
+
+              # Fallback: nothing selected (or everything selected is already in the cart), so use the collections
+              # of the products in the cart
+              if cd_upsell_rendered == 0
+                assign cd_seen_ids = ','
+
+                for cart_item in cart.items
+                  for cart_collection in cart_item.product.collections limit: 5
+                    if cart_collection.handle == 'all' or cart_collection.handle == 'frontpage'
+                      continue
+                    endif
+
+                    for upsell_product in cart_collection.products limit: 50
+                      assign upsell_id_key = ',' | append: upsell_product.id | append: ','
+                      if cd_seen_ids contains upsell_id_key
+                        continue
+                      endif
+                      assign cd_seen_ids = cd_seen_ids | append: upsell_product.id | append: ','
+
+                      assign in_cart = cart | line_items_for: upsell_product
+                      if in_cart.size > 0 or upsell_product.available == false
+                        continue
+                      endif
+
+                      render 'cart-drawer-upsell-card', product: upsell_product, section: section
+                      assign cd_upsell_rendered = cd_upsell_rendered | plus: 1
+
+                      if cd_upsell_rendered >= section.settings.upsell_limit
+                        break
+                      endif
+                    endfor
+
+                    if cd_upsell_rendered >= section.settings.upsell_limit
+                      break
+                    endif
+                  endfor
+
+                  if cd_upsell_rendered >= section.settings.upsell_limit
+                    break
+                  endif
+                endfor
+              endif
+            endif
+          endcapture
+        -%}
+
+        {%- if cd_upsell_rendered > 0 -%}
+          <div class="cd-upsell" role="region" aria-labelledby="{{ cd_carousel_id }}-title">
+            <div class="cd-upsell__header">
+              <p class="cd-upsell__heading" id="{{ cd_carousel_id }}-title">{{ section.settings.recommendations_title | escape }}</p>
+
+              <div class="cd-upsell__nav">
+                <button type="button" class="cd-upsell__arrow" data-cd-carousel-prev aria-controls="{{ cd_carousel_id }}" aria-label="{{ 'general.accessibility.previous' | t | escape }}" disabled>
+                  <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 14 14"><path d="M9 2L4 7l5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </button>
+                <button type="button" class="cd-upsell__arrow" data-cd-carousel-next aria-controls="{{ cd_carousel_id }}" aria-label="{{ 'general.accessibility.next' | t | escape }}">
+                  <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 14 14"><path d="M5 2l5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+                </button>
+              </div>
+            </div>
+
+            <cart-drawer-carousel id="{{ cd_carousel_id }}" class="cd-upsell__track">
+              {{- cd_upsell_cards -}}
+            </cart-drawer-carousel>
+          </div>
+        {%- endif -%}
+      </div>
+    </div>
+
+    <div class="v-stack gap-4 sm:gap-5 cd-footer" slot="footer">
+      {%- if section.settings.allow_discount_application or cart.cart_level_discount_applications.size > 0 -%}
+        <div class="v-stack gap-2.5">
+          {%- if section.settings.allow_discount_application -%}
+            {%- render 'cart-discount' -%}
+          {%- endif -%}
+
+          {%- if cart.cart_level_discount_applications.size > 0 -%}
+            <div class="h-stack gap-2">
+              {%- for discount_application in cart.cart_level_discount_applications -%}
+                <div class="h-stack gap-4 justify-between">
+                  <div class="badge">
+                    {%- render 'icon' with 'discount' -%} {{ discount_application.title }} (-{{ discount_application.total_allocated_amount | money }})
+
+                    {%- if section.settings.allow_discount_application and discount_application.type != '' -%}
+                      <cart-discount-remove-button discount-code="{{ discount_application.title | escape }}" class="h-stack align-center">
+                        <button type="button">{%- render 'icon' with 'delete', width: 8, stroke_width: 3 -%}</button>
+                      </cart-discount-remove-button>
+                    {%- endif -%}
+                  </div>
+                </div>
+              {%- endfor -%}
+            </div>
+          {%- endif -%}
+        </div>
+      {%- endif -%}
+
+      <div class="v-stack gap-1">
+        <div class="cd-totals">
+          {%- if cd_original_total > cart.total_price -%}
+            <div class="cd-totals__row cd-totals__row--subtotal">
+              <p>{{ 'cart.general.subtotal' | t }}</p>
+              <p><s>{{ cd_original_total | money }}</s></p>
+            </div>
+          {%- endif -%}
+
+          <div class="cd-totals__row cd-totals__row--total">
+            <p>{{ 'cart.general.total' | t }}</p>
+
+            <p class="cd-totals__final">
+              {%- if cd_saving_percent > 0 and section.settings.save_badge_text != blank -%}
+                <span class="cd-save-badge">{{ section.settings.save_badge_text | replace: '[percent]', cd_saving_percent | escape }}</span>
+              {%- endif -%}
+              <span>{{ cart.total_price | money }}</span>
+            </p>
+          </div>
+
+        </div>
+
+        {%- if section.settings.show_cart_note -%}
+          <button type="button" class="justify-self-start" aria-controls="cart-drawer-note">
+            <span class="link text-sm text-subdued">
+              {%- if cart.note == blank -%}
+                {{- 'cart.general.add_order_note' | t -}}
+              {%- else -%}
+                {{- 'cart.general.edit_order_note' | t -}}
+              {%- endif -%}
+            </span>
+          </button>
+
+          <cart-note-dialog id="cart-drawer-note" class="cart-drawer__note">
+            <div class="cart-drawer__note-inner">
+              <div class="v-stack gap-4 sm:gap-6">
+                <p class="h5">{{ 'cart.general.order_note' | t }}</p>
+
+                <cart-note class="v-stack gap-4">
+                  {%- assign order_note = 'cart.general.order_note' | t -%}
+                  {%- assign order_save_label = 'cart.general.save_note' | t -%}
+
+                  {%- render 'input', name: 'note', multiline: 3, label: order_note, value: cart.note -%}
+
+                  <div class="justify-self-start">
+                    {%- render 'button', type: 'button', content: order_save_label, size: 'lg', is: 'close-button', secondary: true -%}
+                  </div>
+                </cart-note>
+              </div>
+            </div>
+          </cart-note-dialog>
+        {%- endif -%}
+      </div>
+
+      <form action="{{ routes.cart_url }}" method="POST" class="buy-buttons cd-buy-buttons {% if section.settings.show_checkout_button %}buy-buttons--compact{% endif %}">
+        {%- if section.settings.show_view_cart_button or section.settings.show_checkout_button == false -%}
+          <a href="{{ routes.cart_url }}" class="button button--xl {% if section.settings.show_checkout_button %}button--secondary{% endif %}" data-no-instant>
+            {{- 'cart.general.view_cart' | t -}}
+          </a>
+        {%- endif -%}
+
+        {%- if section.settings.show_checkout_button -%}
+          <button type="submit" name="checkout" class="cd-checkout">
+            <span>{{ section.settings.checkout_text | escape }}</span>
+            <svg aria-hidden="true" focusable="false" width="14" height="14" viewBox="0 0 14 14"><path d="M1 7h11M8 3l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
+          </button>
+        {%- endif -%}
+      </form>
+
+      <img
+          src="https://cdn.shopify.com/s/files/1/0930/0498/8791/files/Trustpilot_300_x_50_px_4.svg?v=1781008709"
+          alt="Trustpilot"
+          style="display: block; margin: 0 auto; width: 200px;"
+        />
+    </div>
+  {%- endif -%}
+</cart-drawer>
+<script>
+  // IP country detection
+  fetch("https://ipwho.is/")
+    .then(res => res.json())
+    .then(data => {
+      const code = data.country_code;
+      const flag = code.replace(/./g, char =>
+        String.fromCodePoint(127397 + char.charCodeAt())
+      );
+      document.getElementById("customer-country").innerText = `${flag} ${code}`;
+    })
+    .catch(() => {
+      document.getElementById("customer-country").innerText = "Your Country";
+    });
+
+  // Cart timer
+  (function() {
+    const TIMER_KEY = 'cart_timer_end';
+    const DURATION = 10 * 60; // 10 minutes in seconds
+
+    function getEndTime() {
+      const stored = sessionStorage.getItem(TIMER_KEY);
+      if (stored) return parseInt(stored);
+      const end = Math.floor(Date.now() / 1000) + DURATION;
+      sessionStorage.setItem(TIMER_KEY, end);
+      return end;
+    }
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function tick() {
+      const end = getEndTime();
+      const remaining = end - Math.floor(Date.now() / 1000);
+      const el = document.getElementById('cart-countdown');
+      const bar = document.getElementById('cart-timer-bar');
+
+      if (!el) return;
+
+      if (remaining <= 0) {
+        el.innerText = '00:00';
+        if (bar) bar.style.background = '#fde8e8';
+        sessionStorage.removeItem(TIMER_KEY);
+        return;
+      }
+
+      el.innerText = formatTime(remaining);
+
+      // Turn red in last 2 minutes
+      if (bar) {
+        bar.style.background = remaining <= 120 ? '#fde8e8' : '#f5f0eb';
+      }
+    }
+
+    tick();
+    setInterval(tick, 1000);
+  })();
+</script>
+{%- endif -%}
+
+{% schema %}
+{
+  "name": "Cart drawer",
+  "settings": [
+    {
+      "type": "paragraph",
+      "content": "Cart drawer won't appear to your customers if you have set the cart type to Page in the global theme settings."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_note",
+      "label": "Show cart note",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shipping_text",
+      "label": "Show shipping text",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "allow_discount_application",
+      "label": "Allow discount application",
+      "default": false
+    },
+    {
+      "type": "checkbox",
+      "id": "show_view_cart_button",
+      "label": "Show view cart button",
+      "default": true
+    },
+    {
+      "type": "checkbox",
+      "id": "show_checkout_button",
+      "label": "Show checkout button",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Top bar and header"
+    },
+    {
+      "type": "text",
+      "id": "announcement_text",
+      "label": "Top bar text",
+      "info": "Leave empty to hide the bar.",
+      "default": "Easy returns & 24/7 customer service"
+    },
+    {
+      "type": "color",
+      "id": "announcement_background",
+      "label": "Top bar background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "announcement_text_color",
+      "label": "Top bar text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "drawer_title",
+      "label": "Drawer title",
+      "info": "The live item count is added automatically, e.g. \"Your bag (2)\".",
+      "default": "Your bag"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_cart_timer",
+      "label": "Show cart reservation timer",
+      "default": true
+    },
+    {
+      "type": "header",
+      "content": "Bundle progress bar"
+    },
+    {
+      "type": "paragraph",
+      "content": "The bar only displays the progress. The actual discount and free shipping must be set up in Shopify admin > Discounts so the cart and checkout totals always match."
+    },
+    {
+      "type": "checkbox",
+      "id": "show_bundle_progress",
+      "label": "Show bundle progress bar",
+      "info": "When disabled, the theme's standard free shipping bar is used.",
+      "default": true
+    },
+    {
+      "type": "range",
+      "id": "bundle_threshold",
+      "label": "Items needed for the bundle",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 2
+    },
+    {
+      "type": "text",
+      "id": "bundle_match",
+      "label": "Items that count toward the bundle",
+      "info": "Product type or tag, separate several with commas (e.g. Knit, Knitwear). Leave empty to count every item."
+    },
+    {
+      "type": "range",
+      "id": "bundle_discount_percent",
+      "label": "Bundle discount shown in messages",
+      "min": 0,
+      "max": 90,
+      "step": 1,
+      "unit": "%",
+      "default": 15
+    },
+    {
+      "type": "text",
+      "id": "bundle_unit_singular",
+      "label": "Item name (singular)",
+      "default": "knit"
+    },
+    {
+      "type": "text",
+      "id": "bundle_unit_plural",
+      "label": "Item name (plural)",
+      "default": "knits"
+    },
+    {
+      "type": "text",
+      "id": "bundle_unreached_message",
+      "label": "Message before the bundle is reached",
+      "info": "Use [remaining], [units] and [discount].",
+      "default": "Add [remaining] more [units] for free shipping and [discount]% off"
+    },
+    {
+      "type": "text",
+      "id": "bundle_reached_message",
+      "label": "Message when the bundle is reached",
+      "default": "Free shipping and bundle discount activated"
+    },
+    {
+      "type": "text",
+      "id": "bundle_reached_submessage",
+      "label": "Confirmation below the bar",
+      "default": "Free shipping unlocked"
+    },
+    {
+      "type": "color",
+      "id": "progress_fill_color",
+      "label": "Bar fill",
+      "default": "#3b6b44"
+    },
+    {
+      "type": "header",
+      "content": "Line items"
+    },
+    {
+      "type": "text",
+      "id": "material_metafield",
+      "label": "Material metafield",
+      "info": "Product metafield in namespace.key format, e.g. custom.material",
+      "default": "custom.material"
+    },
+    {
+      "type": "text",
+      "id": "material_fallback",
+      "label": "Material fallback text",
+      "info": "Shown when the product has no material metafield. Leave empty to hide."
+    },
+    {
+      "type": "header",
+      "content": "Finish bundle deal (upsell)"
+    },
+    {
+      "type": "text",
+      "id": "recommendations_title",
+      "label": "Heading",
+      "default": "Complete your rotation"
+    },
+    {
+      "type": "select",
+      "id": "upsell_source",
+      "label": "Products source",
+      "options": [
+        { "value": "manual", "label": "Selected products" },
+        { "value": "collection", "label": "Collection" },
+        { "value": "related", "label": "Shopify recommendations (related)" },
+        { "value": "complementary", "label": "Shopify recommendations (complementary)" }
+      ],
+      "default": "manual"
+    },
+    {
+      "type": "product_list",
+      "id": "products",
+      "label": "Selected products",
+      "info": "Used when source is \"Selected products\". Products already in the cart are automatically hidden. If empty, products from the collections of the cart items are shown.",
+      "limit": 10
+    },
+    {
+      "type": "collection",
+      "id": "upsell_collection",
+      "label": "Collection",
+      "info": "Used when source is \"Collection\". If empty, products from the collections of the cart items are shown."
+    },
+    {
+      "type": "range",
+      "id": "upsell_limit",
+      "label": "Products to show",
+      "min": 1,
+      "max": 10,
+      "step": 1,
+      "default": 6
+    },
+    {
+      "type": "text",
+      "id": "upsell_choose_size",
+      "label": "Size placeholder",
+      "default": "Choose size"
+    },
+    {
+      "type": "text",
+      "id": "upsell_add_text",
+      "label": "Add button",
+      "default": "Add"
+    },
+    {
+      "type": "color",
+      "id": "product_card_background",
+      "label": "Product card background"
+    },
+    {
+      "type": "color",
+      "id": "product_card_text_color",
+      "label": "Product card text"
+    },
+    {
+      "type": "header",
+      "content": "Footer"
+    },
+    {
+      "type": "text",
+      "id": "save_badge_text",
+      "label": "Saving badge",
+      "info": "Use [percent]. Calculated from compare-at prices and the final total. Leave empty to hide.",
+      "default": "Save [percent]%"
+    },
+    {
+      "type": "color",
+      "id": "save_badge_background",
+      "label": "Saving badge background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "save_badge_text_color",
+      "label": "Saving badge text",
+      "default": "#ffffff"
+    },
+    {
+      "type": "text",
+      "id": "checkout_text",
+      "label": "Checkout button",
+      "default": "Continue to checkout"
+    },
+    {
+      "type": "color",
+      "id": "checkout_background",
+      "label": "Checkout button background",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "checkout_text_color",
+      "label": "Checkout button text",
+      "default": "#ffffff"
+    }
+  ]
+}
+{% endschema %}

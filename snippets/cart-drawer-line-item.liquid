@@ -1,0 +1,218 @@
+{%- comment -%}
+----------------------------------------------------------------------------------------------------------------------
+CART DRAWER LINE ITEM
+----------------------------------------------------------------------------------------------------------------------
+
+Line item used only by the cart drawer: image, title, material line, sale + compare-at price, quantity stepper,
+size dropdown (swaps the variant in the cart) and a remove button. Quantity changes go through the theme's own
+<line-item-quantity> element so the drawer refreshes exactly as before.
+
+********************************************
+Supported variables
+********************************************
+
+* line_item: the line item to render (required)
+* index: the position of the line item, used for unique ids (required)
+{%- endcomment -%}
+
+{%- liquid
+  assign max_quantity = nil
+
+  if line_item.variant.inventory_management != blank and line_item.variant.inventory_policy == 'deny'
+    assign current_quantity_for_variant = cart | item_count_for_variant: line_item.variant.id
+    assign max_quantity = line_item.variant.inventory_quantity | minus: current_quantity_for_variant | plus: line_item.quantity
+  endif
+
+  if line_item.variant.quantity_rule.max != nil
+    assign max_quantity = max_quantity | default: 999999 | at_most: line_item.variant.quantity_rule.max
+  endif
+
+  assign min_quantity = line_item.variant.quantity_rule.min | default: 1
+  assign sold_out_text = 'product.general.sold_out_button' | t
+  assign item_title = line_item.product.title | default: line_item.title
+
+  # Material line: product metafield (e.g. "custom.material"), with an optional fallback text
+  assign material = ''
+  if section.settings.material_metafield contains '.'
+    assign mf_parts = section.settings.material_metafield | strip | split: '.'
+    assign material = line_item.product.metafields[mf_parts[0]][mf_parts[1]].value
+  endif
+  if material == blank
+    assign material = section.settings.material_fallback
+  endif
+
+  # Prices (before cart discounts, so the bundle discount only shows in the footer total)
+  assign unit_compare_at = line_item.variant.compare_at_price | default: 0
+  assign line_compare_at = unit_compare_at | times: line_item.quantity
+
+  # Find the "size" option to build the size dropdown
+  assign size_index = -1
+  assign size_names = 'size,größe,grösse,taille,maat,taglia,talla,tamanho,storlek,størrelse,koko,rozmiar,velikost' | split: ','
+
+  unless line_item.product.has_only_default_variant or line_item.gift_card
+    for option in line_item.product.options_with_values
+      assign option_index = forloop.index0
+      assign option_name = option.name | downcase | strip
+
+      for size_name in size_names
+        assign size_name_clean = size_name | strip
+        if size_name_clean == option_name
+          assign size_index = option_index
+          break
+        endif
+      endfor
+
+      if size_index != -1
+        break
+      endif
+    endfor
+
+    if size_index == -1 and line_item.product.options.size == 1
+      assign size_index = 0
+    endif
+  endunless
+
+  capture size_options
+    if size_index != -1
+      for variant in line_item.product.variants
+        assign same_other_options = true
+
+        for variant_option in variant.options
+          if forloop.index0 != size_index
+            assign current_option = line_item.variant.options[forloop.index0]
+            if variant_option != current_option
+              assign same_other_options = false
+            endif
+          endif
+        endfor
+
+        if same_other_options
+          assign size_label = variant.options[size_index]
+          if variant.id == line_item.variant_id
+            echo '<option value="' | append: variant.id | append: '" selected>' | append: size_label | append: '</option>'
+          elsif variant.available
+            echo '<option value="' | append: variant.id | append: '">' | append: size_label | append: '</option>'
+          else
+            echo '<option value="' | append: variant.id | append: '" disabled>' | append: size_label | append: ' – ' | append: sold_out_text | append: '</option>'
+          endif
+        endif
+      endfor
+    endif
+  endcapture
+
+  assign size_option_count = size_options | split: '<option' | size | minus: 1
+-%}
+
+<line-item class="line-item cd-line">
+  <div class="line-item__media-wrapper cd-line__media">
+    {%- if line_item.image != blank -%}
+      {%- if line_item.url != blank -%}<a href="{{ line_item.url }}" tabindex="-1" aria-hidden="true">{%- endif -%}
+      {{- line_item.image | image_url: width: line_item.image.width | image_tag: loading: 'lazy', sizes: '(max-width: 699px) 88px, 96px', widths: '96,192,288', class: 'line-item__media cd-line__image', alt: item_title -}}
+      {%- if line_item.url != blank -%}</a>{%- endif -%}
+    {%- endif -%}
+
+    <pill-loader class="pill-loader"></pill-loader>
+  </div>
+
+  <div class="line-item__info cd-line__info">
+    <div class="cd-line__head">
+      {%- if line_item.url != blank -%}
+        <a href="{{ line_item.url }}" class="cd-line__title">{{ item_title }}</a>
+      {%- else -%}
+        <p class="cd-line__title">{{ item_title }}</p>
+      {%- endif -%}
+
+      <button type="button" class="cd-line__remove" data-cd-remove aria-label="{{ 'cart.order.remove_with_title' | t: title: line_item.title | escape }}">
+        <svg aria-hidden="true" focusable="false" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6M10 11v6M14 11v6"/></svg>
+        <span>{{ 'cart.order.remove' | t }}</span>
+      </button>
+    </div>
+
+    {%- if material != blank -%}
+      <p class="cd-line__material">{{ material }}</p>
+    {%- endif -%}
+
+    <p class="cd-line__prices">
+      <span class="sr-only">{{ 'product.price.sale_price' | t }}</span>
+      <span class="cd-line__price">{{ line_item.original_line_price | money }}</span>
+
+      {%- if line_compare_at > line_item.original_line_price -%}
+        <span class="sr-only">{{ 'product.price.regular_price' | t }}</span>
+        <s class="cd-line__compare">{{ line_compare_at | money }}</s>
+      {%- endif -%}
+    </p>
+
+    {%- if size_option_count < 2 -%}
+      {%- unless line_item.product.has_only_default_variant or line_item.gift_card -%}
+        <p class="cd-line__variant">{{ line_item.variant.title }}</p>
+      {%- endunless -%}
+    {%- endif -%}
+
+    {%- if line_item.selling_plan_allocation -%}
+      <p class="cd-line__variant">{{ line_item.selling_plan_allocation.selling_plan.name }}</p>
+    {%- endif -%}
+
+    {%- unless line_item.properties == blank -%}
+      <ul class="cd-line__properties">
+        {%- for property in line_item.properties -%}
+          {%- assign first_character_in_key = property.first | truncate: 1, '' -%}
+
+          {%- if property.last == blank or first_character_in_key == '_' -%}
+            {%- continue -%}
+          {%- endif -%}
+
+          <li>
+            {%- if property.last contains '/uploads/' -%}
+              <a href="{{ property.last }}" class="link">{{ property.last | split: '/' | last }}</a>
+            {%- else -%}
+              {{ property.first }}: {{ property.last }}
+            {%- endif -%}
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endunless -%}
+
+    <div class="cd-line__controls">
+      <line-item-quantity class="cd-qty">
+        <button type="button" class="cd-qty__button" data-cd-qty-step="-1" aria-label="{{ 'cart.order.decrease_quantity' | t | escape }}: {{ item_title | escape }}" {% if line_item.quantity <= min_quantity %}disabled{% endif %}>
+          <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 10 10"><path d="M1 5h8" stroke="currentColor" stroke-width="1.4"/></svg>
+        </button>
+
+        <input class="quantity-input cd-qty__input" type="number" inputmode="numeric" min="{{ min_quantity }}" step="{{ line_item.variant.quantity_rule.increment | default: 1 }}" {% if max_quantity != nil %}max="{{ max_quantity }}"{% endif %} data-line-key="{{ line_item.key }}" aria-label="{{ 'cart.order.change_quantity' | t | escape }}: {{ item_title | escape }}" value="{{ line_item.quantity }}">
+
+        <button type="button" class="cd-qty__button" data-cd-qty-step="1" aria-label="{{ 'cart.order.increase_quantity' | t | escape }}: {{ item_title | escape }}" {% if max_quantity != nil and line_item.quantity >= max_quantity %}disabled{% endif %}>
+          <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 10 10"><path d="M1 5h8M5 1v8" stroke="currentColor" stroke-width="1.4"/></svg>
+        </button>
+      </line-item-quantity>
+
+      {%- if size_option_count > 1 -%}
+        {%- assign select_id = section.id | append: '-cd-size-' | append: index -%}
+        <div class="cd-select-wrapper cd-line__size">
+          <label for="{{ select_id }}" class="sr-only">{{ line_item.product.options[size_index] | escape }}: {{ item_title | escape }}</label>
+          <select
+            id="{{ select_id }}"
+            class="cd-select"
+            data-cd-variant-select
+            data-line-key="{{ line_item.key }}"
+            data-quantity="{{ line_item.quantity }}"
+            data-current-variant="{{ line_item.variant_id }}"
+            data-selling-plan="{{ line_item.selling_plan_allocation.selling_plan.id }}"
+            data-properties="{{ line_item.properties | json | escape }}"
+          >
+            {{- size_options -}}
+          </select>
+        </div>
+      {%- endif -%}
+    </div>
+
+    {%- if show_line_discounts and line_item.line_level_discount_allocations != blank -%}
+      <ul class="contents" role="list">
+        {%- for discount_allocation in line_item.line_level_discount_allocations -%}
+          <li class="badge">
+            {%- render 'icon' with 'discount' -%} {{ discount_allocation.discount_application.title }} (-{{ discount_allocation.amount | money }})
+          </li>
+        {%- endfor -%}
+      </ul>
+    {%- endif -%}
+  </div>
+</line-item>

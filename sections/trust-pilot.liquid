@@ -1,0 +1,455 @@
+<div class="tp-wrapper" style="padding: {{ section.settings.padding_top }}px 0 {{ section.settings.padding_bottom }}px;">
+  <div class="page-width tp-grid">
+
+    <!-- LEFT COLUMN -->
+    <div class="tp-left">
+      <h2 class="tp-title">{{ section.settings.section_title }}</h2>
+
+      <p class="tp-subtitle">
+        {{ section.settings.subtitle }}
+      </p>
+
+      <div class="tp-stars-summary">
+        <img src="https://cdn.shopify.com/s/files/1/0930/0498/8791/files/Screenshot_2025-11-26_at_5.47.37_PM.png?v=1764161351" style="width: 50%;">
+      </div>
+
+      <div class="tp-tp-logo">
+        <svg width="140" viewBox="0 0 100 20">
+          <text x="18" y="15" font-size="12" font-weight="bold" fill="#191C3C">Trustpilot</text>
+          <polygon points="10,1 12,7 18,7 13,11 15,17 10,13 5,17 6.8,11 2,7 8,7" fill="#00B67A"></polygon>
+        </svg>
+      </div>
+    </div>
+
+    <!-- RIGHT COLUMN -->
+    <div class="tp-right">
+<div class="tp-left-fade"></div>
+
+      <!-- REVIEW SLIDER -->
+      <div class="tp-slider" id="tpSlider">
+        {% for block in section.blocks %}
+          <div class="tp-card">
+            <div class="tp-card-stars">
+              {% for i in (1..block.settings.stars) %}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="#1C204E">
+                  <path d="M12 .587l3.668 7.568L24 9.748l-6 5.848L19.335 24 12 19.897 4.665 24 6 15.596 0 9.748l8.332-1.593z"/>
+                </svg>
+              {% endfor %}
+            </div>
+
+            <div class="tp-card-title">{{ block.settings.review_title }}</div>
+
+            <div class="tp-card-text">
+              {{ block.settings.review_text }}
+            </div>
+
+            <div class="tp-card-footer">
+              <span class="tp-name">{{ block.settings.reviewer_name }}</span>
+              <span class="tp-date">{{ block.settings.review_date }}</span>
+            </div>
+          </div>
+        {% endfor %}
+      </div>
+
+      <!-- ARROWS -->
+      <div class="tp-bottom">
+      <div class="tp-arrows">
+        <button class="tp-arrow tp-left-btn">‹</button>
+        <button class="tp-arrow tp-right-btn">›</button>
+      </div>
+
+      <a class="tp-more-reviews" href="https://www.trustpilot.com/review/merso.com?utm_medium=trustbox&utm_source=TrustBoxReviewCollector">
+        see more reviews →
+      </a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<style>
+/* Base styles (your current styles) */
+.tp-wrapper {
+  background: #ffffff;
+}
+
+.tp-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 30px;
+  padding-left: 50px;
+}
+
+/* LEFT COLUMN */
+.tp-left {
+  padding-right: 10px;
+}
+
+.tp-title {
+  font-size: 36px;
+  line-height: 1;
+}
+
+.tp-subtitle {
+  font-size: 20px;
+  margin: 30px 0 20px;
+  font-weight: 500;
+}
+
+.tp-stars-summary {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 25px;
+}
+
+.tp-tp-logo {
+  margin-top: 15px;
+}
+
+/* RIGHT COLUMN */
+.tp-right {
+  max-width: 100%;
+  overflow: hidden;
+  position: relative;
+}
+
+#tpSlider {
+  display: flex !important;
+  gap: 35px;
+  overflow-x: auto !important;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+  padding-left: 80px; /* fade effect */
+}
+
+.tp-card {
+  min-width: 330px;
+  background: #F4F4F4;
+  border-radius: 10px;
+  padding: 28px;
+  scroll-snap-align: start;
+  transition: 0.3s ease;
+}
+
+/* Hide scrollbar */
+.tp-slider::-webkit-scrollbar { display: none; }
+
+/* Review Card */
+.tp-card-stars {
+  display: flex;
+  gap: 4px;
+  margin-bottom: 15px;
+}
+
+.tp-card-title {
+  font-size: 18px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  color: #191C3C;
+}
+
+.tp-card-text {
+  font-size: 15px;
+  color: #1C204E;
+  margin-bottom: 25px;
+}
+
+.tp-card-footer {
+  display: flex;
+  justify-content: space-between;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.tp-name { color: #191C3C; }
+.tp-date { color: #191C3C; opacity: 0.8; }
+
+/* Arrows Bottom */
+.tp-arrows {
+  display: flex;
+  gap: 20px;
+  margin-top: 30px;
+  text-align: center;
+}
+
+.tp-bottom {
+  display: flex;
+  align-content: center;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 30px;
+}
+
+.tp-arrow {
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  font-size: 20px;
+  background: #EAEAEA;
+  border: none;
+  cursor: pointer;
+}
+
+/* More Reviews Link */
+.tp-more-reviews {
+  display: inline-block;
+  margin-top: 25px;
+  font-size: 16px;
+  color: #191C3C;
+  text-decoration: none;
+}
+
+.tp-left-fade {
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 70%;
+  width: 80px;
+  pointer-events: none;
+  background: linear-gradient(to right, #f3f3f3 0%, rgba(243,243,243,0) 100%);
+  z-index: 5;
+  border-radius: 12px 0 0 12px;
+}
+
+/* Dragging */
+#tpSlider.dragging {
+  cursor: grabbing;
+  scroll-behavior: auto !important;
+}
+
+/* Responsive Styles */
+@media screen and (max-width: 1200px) {
+  .tp-grid {
+    grid-template-columns: 300px 1fr;
+    gap: 20px;
+    padding-left: 30px;
+  }
+
+  .tp-title {
+    font-size: 32px;
+  }
+
+  .tp-subtitle {
+    font-size: 18px;
+  }
+
+  #tpSlider {
+    gap: 25px;
+    padding-left: 60px;
+  }
+
+  .tp-card {
+    min-width: 280px;
+    padding: 22px;
+  }
+}
+
+@media screen and (max-width: 900px) {
+  .tp-grid {
+    grid-template-columns: 1fr;
+    padding-left: 20px;
+    gap: 20px;
+  }
+
+  .tp-left {
+    text-align: center;
+    padding-right: 0;
+  }
+
+  #tpSlider {
+    padding-left: 20px;
+    gap: 20px;
+  }
+
+  .tp-card {
+    min-width: 250px;
+    padding: 18px;
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .tp-title {
+    font-size: 28px;
+  }
+
+  .tp-subtitle {
+    font-size: 16px;
+  }
+
+  .tp-card {
+    min-width: 220px;
+    padding: 15px;
+  }
+
+  .tp-arrows {
+    gap: 15px;
+  }
+
+  .tp-arrow {
+    width: 40px;
+    height: 40px;
+    font-size: 18px;
+  }
+
+  .tp-more-reviews {
+    font-size: 14px;
+  }
+
+  .tp-left-fade {
+    width: 50px;
+  }
+  .tp-stars-summary{
+        justify-content: center;
+  }
+}
+
+</style>    
+
+<script>
+document.addEventListener("DOMContentLoaded", initTPSlider);
+document.addEventListener("shopify:section:load", initTPSlider);
+
+function initTPSlider() {
+  const slider = document.getElementById("tpSlider");
+  const left = document.querySelector(".tp-left-btn");
+  const right = document.querySelector(".tp-right-btn");
+
+  if (!slider || !left || !right) return;
+
+  const scrollAmount = 350;
+
+  left.addEventListener("click", () => {
+    slider.scrollBy({ left: -scrollAmount, behavior: "smooth" });
+  });
+
+  right.addEventListener("click", () => {
+    slider.scrollBy({ left: scrollAmount, behavior: "smooth" });
+  });
+}
+</script>
+
+{% schema %}
+{
+  "name": "Trustpilot Reviews",
+  "settings": [
+    {
+      "type": "text",
+      "id": "section_title",
+      "label": "Section Title",
+      "default": "Wat onze klanten zeggen"
+    },
+    {
+      "type": "text",
+      "id": "subtitle",
+      "label": "Subtitle",
+      "default": "Uitstekend 4.7 van de 5 sterren"
+    },
+    {
+      "type": "color",
+      "id": "star_color",
+      "label": "Star Color",
+      "default": "#00B67A"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text Color",
+      "default": "#000000"
+    },
+    {
+      "type": "color",
+      "id": "bg_color",
+      "label": "Section Background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "range",
+      "id": "padding_top",
+      "label": "Padding Top",
+      "min": 0,
+      "max": 100,
+      "default": 40
+    },
+    {
+      "type": "range",
+      "id": "padding_bottom",
+      "label": "Padding Bottom",
+      "min": 0,
+      "max": 100,
+      "default": 40
+    }
+  ],
+  "blocks": [
+    {
+      "type": "review",
+      "name": "Review",
+      "settings": [
+        {
+          "type": "range",
+          "id": "stars",
+          "label": "Star Rating",
+          "min": 1,
+          "max": 5,
+          "default": 5
+        },
+        {
+          "type": "text",
+          "id": "review_title",
+          "label": "Review Title",
+          "default": "Ultra snelle levering"
+        },
+        {
+          "type": "textarea",
+          "id": "review_text",
+          "label": "Review Text",
+          "default": "Geweldige kwaliteit!"
+        },
+        {
+          "type": "text",
+          "id": "reviewer_name",
+          "label": "Reviewer Name",
+          "default": "John Doe"
+        },
+        {
+          "type": "text",
+          "id": "review_date",
+          "label": "Review Date",
+          "default": "27-09-2025"
+        },
+        {
+          "type": "image_picker",
+          "id": "reviewer_image",
+          "label": "Reviewer Image (optional)"
+        },
+        {
+          "type": "color",
+          "id": "card_bg_color",
+          "label": "Card Background",
+          "default": "#F7F7F7"
+        },
+        {
+          "type": "color",
+          "id": "card_text_color",
+          "label": "Card Text Color",
+          "default": "#1A1A33"
+        },
+        {
+          "type": "range",
+          "id": "card_padding",
+          "label": "Card Padding",
+          "min": 20,
+          "max": 80,
+          "default": 40
+        }
+      ]
+    }
+  ],
+  "presets": [
+    {
+      "name": "Trustpilot Reviews Section"
+    }
+  ]
+}
+{% endschema %}
