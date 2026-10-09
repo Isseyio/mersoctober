@@ -17,12 +17,18 @@ Supported variables
   assign form_id = 'cd-upsell-' | append: section.id | append: '-' | append: product.id
   assign select_id = form_id | append: '-variant'
   assign first_variant = product.selected_or_first_available_variant
+
+  # Card image: featured image, or the second image when that one shows the knit better (flat lay, close-up)
+  assign card_image = product.featured_media.preview_image
+  if section.settings.upsell_image == 'second' and product.media.size > 1
+    assign card_image = product.media[1].preview_image | default: card_image
+  endif
 -%}
 
 <div class="cd-upsell__card" data-product-id="{{ product.id }}">
   <a href="{{ product.url }}" class="cd-upsell__media" tabindex="-1" aria-hidden="true">
-    {%- if product.featured_media != blank -%}
-      {{- product.featured_media | image_url: width: product.featured_media.width | image_tag: loading: 'lazy', sizes: '(max-width: 699px) 45vw, 210px', widths: '200,300,400,600', class: 'cd-upsell__image', alt: product.title -}}
+    {%- if card_image != blank -%}
+      {{- card_image | image_url: width: card_image.width | image_tag: loading: 'lazy', sizes: '(max-width: 699px) 30vw, 160px', widths: '150,200,300,400,500', class: 'cd-upsell__image', alt: product.title -}}
     {%- else -%}
       {{- 'product-1' | placeholder_svg_tag: 'cd-upsell__image' -}}
     {%- endif -%}

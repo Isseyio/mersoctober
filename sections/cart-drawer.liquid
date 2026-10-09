@@ -27,6 +27,7 @@
     --cd-badge-text: {{ section.settings.save_badge_text_color }};
     --cd-checkout-bg: {{ section.settings.checkout_background }};
     --cd-checkout-text: {{ section.settings.checkout_text_color }};
+    --cd-upsell-focus: {{ section.settings.upsell_image_focus | default: '50% 70%' }};
     {%- if section.settings.product_card_background != blank and section.settings.product_card_background != 'rgba(0,0,0,0)' %}
     --cd-card-bg: {{ section.settings.product_card_background }};
     {%- endif %}
@@ -112,30 +113,75 @@
       assign cd_count_label = cd_bundle_count | append: ' / ' | append: cd_threshold | append: ' ' | append: section.settings.bundle_unit_plural
 
       if cd_bundle_reached
-        assign cd_message = section.settings.bundle_reached_message
+        assign cd_message = section.settings.bundle_reached_message | replace: '[discount]', section.settings.bundle_discount_percent
       else
         assign cd_message = section.settings.bundle_unreached_message | replace: '[remaining]', cd_remaining | replace: '[units]', cd_remaining_unit | replace: '[discount]', section.settings.bundle_discount_percent
       endif
 
       # ------------------------------------------------------------------------------------------------------------
-      # Footer totals: original value (compare-at prices), final total (after Shopify discounts) and saving %
+      # Free shipping status: unlocked by the bundle, by a cart amount, or by a free shipping discount code
+      # ------------------------------------------------------------------------------------------------------------
+      assign cd_ship_mode = section.settings.free_shipping_trigger
+      assign cd_ship_unlocked = false
+      assign cd_ship_unreached = ''
+
+      for discount_application in cart.discount_applications
+        if discount_application.target_type == 'shipping_line' and discount_application.value_type == 'percentage' and discount_application.value >= 100
+          assign cd_ship_unlocked = true
+        endif
+      endfor
+
+      case cd_ship_mode
+        when 'bundle'
+          if cd_bundle_reached
+            assign cd_ship_unlocked = true
+          endif
+          assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_items' | t: remaining: cd_remaining, units: cd_remaining_unit
+
+        when 'amount'
+          assign cd_ship_threshold = settings.cart_free_shipping_threshold | times: 100 | round
+          assign cd_ship_left = cd_ship_threshold | minus: cart.total_price
+
+          if cd_ship_left <= 0
+            assign cd_ship_unlocked = true
+          endif
+
+          assign cd_ship_left_money = cd_ship_left | at_least: 0 | money
+          assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_amount' | t: amount: cd_ship_left_money
+      endcase
+
+      assign cd_show_ship_status = false
+      if cart.requires_shipping
+        if cd_ship_mode != 'none' or cd_ship_unlocked
+          assign cd_show_ship_status = true
+        endif
+      endif
+
+      # ------------------------------------------------------------------------------------------------------------
+      # Footer totals: original value (compare-at prices), sale savings, Shopify discounts, final total and saving %
       # ------------------------------------------------------------------------------------------------------------
       assign cd_original_total = 0
+      assign cd_sale_savings = 0
 
       for item in cart.items
         assign unit_original = item.original_price
         if item.variant.compare_at_price > item.original_price
           assign unit_original = item.variant.compare_at_price
+          assign line_sale_saving = item.variant.compare_at_price | minus: item.original_price | times: item.quantity
+          assign cd_sale_savings = cd_sale_savings | plus: line_sale_saving
         endif
         assign line_original = unit_original | times: item.quantity
         assign cd_original_total = cd_original_total | plus: line_original
       endfor
 
+      assign cd_total_savings = 0
       assign cd_saving_percent = 0
       if cd_original_total > cart.total_price
-        assign cd_saving_percent = cd_original_total | minus: cart.total_price | times: 100.0 | divided_by: cd_original_total | round
+        assign cd_total_savings = cd_original_total | minus: cart.total_price
+        assign cd_saving_percent = cd_total_savings | times: 100.0 | divided_by: cd_original_total | round
       endif
 
+      assign cd_discount_codes = cart.discount_applications | where: 'type', 'discount_code'
     -%}
 
     <div class="cart-drawer__inner cd-inner">
@@ -176,10 +222,19 @@
               <span class="cd-progress__fill" style="width: {{ cd_progress }}%"></span>
             </div>
 
-            {%- if cd_bundle_reached and section.settings.bundle_reached_submessage != blank -%}
-              <p class="cd-progress__sub">
-                <svg aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 12 12"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                {{ section.settings.bundle_reached_submessage | escape }}
+            {%- if cd_show_ship_status -%}
+              <p class="cd-shipping {% if cd_ship_unlocked %}is-unlocked{% endif %}" aria-live="polite">
+                <svg class="cd-shipping__icon" aria-hidden="true" focusable="false" width="18" height="14" viewBox="0 0 18 14"><path d="M1 1.5h10v8.5H1zM11 4.5h3.5L17 7.5v2.5h-6" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/><circle cx="4.5" cy="11.5" r="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/><circle cx="13.5" cy="11.5" r="1.5" fill="#fff" stroke="currentColor" stroke-width="1.2"/></svg>
+                <span>
+                  {%- if cd_ship_unlocked -%}
+                    {{- 'cart.drawer.free_shipping_activated' | t -}}
+                  {%- else -%}
+                    {{- cd_ship_unreached -}}
+                  {%- endif -%}
+                </span>
+                {%- if cd_ship_unlocked -%}
+                  <svg class="cd-shipping__check" aria-hidden="true" focusable="false" width="10" height="10" viewBox="0 0 12 12"><path d="M1.5 6.5l3 3 6-7" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                {%- endif -%}
               </p>
             {%- endif -%}
           </div>
@@ -307,25 +362,36 @@
     </div>
 
     <div class="v-stack gap-4 sm:gap-5 cd-footer" slot="footer">
-      {%- if section.settings.allow_discount_application or cart.cart_level_discount_applications.size > 0 -%}
+      {%- liquid
+        # Applied discount codes are shown as chips when customers can add/remove codes in the drawer, or when the
+        # savings breakdown (which already lists every code with its amount) is turned off
+        assign cd_show_code_chips = false
+        if cd_discount_codes.size > 0
+          if section.settings.allow_discount_application or section.settings.show_savings_breakdown == false
+            assign cd_show_code_chips = true
+          endif
+        endif
+      -%}
+
+      {%- if section.settings.allow_discount_application or cd_show_code_chips -%}
         <div class="v-stack gap-2.5">
           {%- if section.settings.allow_discount_application -%}
             {%- render 'cart-discount' -%}
           {%- endif -%}
 
-          {%- if cart.cart_level_discount_applications.size > 0 -%}
-            <div class="h-stack gap-2">
-              {%- for discount_application in cart.cart_level_discount_applications -%}
-                <div class="h-stack gap-4 justify-between">
-                  <div class="badge">
-                    {%- render 'icon' with 'discount' -%} {{ discount_application.title }} (-{{ discount_application.total_allocated_amount | money }})
+          {%- if cd_show_code_chips -%}
+            <div class="h-stack gap-2 wrap">
+              {%- for discount_application in cd_discount_codes -%}
+                <div class="badge cd-code-chip">
+                  {%- render 'icon' with 'discount' -%}
+                  {%- render 'cart-drawer-discount-label', discount_application: discount_application, section: section %}
+                  {%- if discount_application.target_type != 'shipping_line' and discount_application.total_allocated_amount > 0 %} (−{{ discount_application.total_allocated_amount | money }}){%- endif -%}
 
-                    {%- if section.settings.allow_discount_application and discount_application.type != '' -%}
-                      <cart-discount-remove-button discount-code="{{ discount_application.title | escape }}" class="h-stack align-center">
-                        <button type="button">{%- render 'icon' with 'delete', width: 8, stroke_width: 3 -%}</button>
-                      </cart-discount-remove-button>
-                    {%- endif -%}
-                  </div>
+                  {%- if section.settings.allow_discount_application -%}
+                    <cart-discount-remove-button discount-code="{{ discount_application.title | escape }}" class="h-stack align-center">
+                      <button type="button" aria-label="{{ 'cart.order.remove' | t | escape }}: {{ discount_application.title | escape }}">{%- render 'icon' with 'delete', width: 8, stroke_width: 3 -%}</button>
+                    </cart-discount-remove-button>
+                  {%- endif -%}
                 </div>
               {%- endfor -%}
             </div>
@@ -335,7 +401,46 @@
 
       <div class="v-stack gap-1">
         <div class="cd-totals">
-          {%- if cd_original_total > cart.total_price -%}
+          {%- if section.settings.show_savings_breakdown -%}
+            {%- if cd_total_savings > 0 -%}
+              <div class="cd-totals__row cd-totals__row--muted">
+                <p>{{ 'cart.general.subtotal' | t }}</p>
+                <p>{{ cd_original_total | money }}</p>
+              </div>
+
+              {%- if cd_sale_savings > 0 -%}
+                <div class="cd-totals__row cd-totals__row--saving">
+                  <p>{{ 'cart.drawer.sale_savings' | t }}</p>
+                  <p>−{{ cd_sale_savings | money }}</p>
+                </div>
+              {%- endif -%}
+
+              {%- for discount_application in cart.discount_applications -%}
+                {%- if discount_application.target_type == 'shipping_line' or discount_application.total_allocated_amount <= 0 -%}
+                  {%- continue -%}
+                {%- endif -%}
+
+                <div class="cd-totals__row cd-totals__row--saving">
+                  <p class="cd-totals__discount">
+                    {%- render 'icon' with 'discount', width: 12 -%}
+                    <span>{%- render 'cart-drawer-discount-label', discount_application: discount_application, section: section -%}</span>
+                  </p>
+                  <p>−{{ discount_application.total_allocated_amount | money }}</p>
+                </div>
+              {%- endfor -%}
+            {%- endif -%}
+
+            {%- if cart.requires_shipping -%}
+              <div class="cd-totals__row cd-totals__row--muted">
+                <p>{{ 'cart.drawer.shipping' | t }}</p>
+                {%- if cd_ship_unlocked -%}
+                  <p class="cd-totals__free">{{ 'cart.drawer.shipping_free' | t }}</p>
+                {%- else -%}
+                  <p>{{ 'cart.drawer.shipping_calculated' | t }}</p>
+                {%- endif -%}
+              </div>
+            {%- endif -%}
+          {%- elsif cd_original_total > cart.total_price -%}
             <div class="cd-totals__row cd-totals__row--subtotal">
               <p>{{ 'cart.general.subtotal' | t }}</p>
               <p><s>{{ cd_original_total | money }}</s></p>
@@ -347,12 +452,17 @@
 
             <p class="cd-totals__final">
               {%- if cd_saving_percent > 0 and section.settings.save_badge_text != blank -%}
-                <span class="cd-save-badge">{{ section.settings.save_badge_text | replace: '[percent]', cd_saving_percent | escape }}</span>
+                {%- assign cd_total_savings_money = cd_total_savings | money -%}
+                <span class="cd-save-badge">{{ section.settings.save_badge_text | escape | replace: '[percent]', cd_saving_percent | replace: '[amount]', cd_total_savings_money }}</span>
               {%- endif -%}
               <span>{{ cart.total_price | money }}</span>
             </p>
           </div>
 
+          {%- if cd_total_savings > 0 -%}
+            {%- assign cd_total_savings_money = cd_total_savings | money -%}
+            <p class="cd-totals__savings">{{ 'cart.drawer.total_savings' | t: amount: cd_total_savings_money }}</p>
+          {%- endif -%}
         </div>
 
         {%- if section.settings.show_cart_note -%}
@@ -489,12 +599,6 @@
     },
     {
       "type": "checkbox",
-      "id": "show_shipping_text",
-      "label": "Show shipping text",
-      "default": true
-    },
-    {
-      "type": "checkbox",
       "id": "allow_discount_application",
       "label": "Allow discount application",
       "default": false
@@ -604,25 +708,36 @@
       "id": "bundle_unreached_message",
       "label": "Message before the bundle is reached",
       "info": "Use [remaining], [units] and [discount].",
-      "default": "Add [remaining] more [units] for free shipping and [discount]% off"
+      "default": "Add [remaining] more [units] and save [discount]%"
     },
     {
       "type": "text",
       "id": "bundle_reached_message",
       "label": "Message when the bundle is reached",
-      "default": "Free shipping and bundle discount activated"
-    },
-    {
-      "type": "text",
-      "id": "bundle_reached_submessage",
-      "label": "Confirmation below the bar",
-      "default": "Free shipping unlocked"
+      "info": "Use [discount].",
+      "default": "Bundle discount activated – [discount]% off"
     },
     {
       "type": "color",
       "id": "progress_fill_color",
       "label": "Bar fill",
       "default": "#3b6b44"
+    },
+    {
+      "type": "header",
+      "content": "Free shipping status"
+    },
+    {
+      "type": "select",
+      "id": "free_shipping_trigger",
+      "label": "Free shipping is unlocked by",
+      "info": "Match this to your shipping rates in Shopify admin. A free shipping discount code always shows as activated.",
+      "options": [
+        { "value": "bundle", "label": "Reaching the bundle" },
+        { "value": "amount", "label": "Cart amount (theme settings > Cart > free shipping threshold)" },
+        { "value": "none", "label": "Hide free shipping status" }
+      ],
+      "default": "bundle"
     },
     {
       "type": "header",
@@ -649,7 +764,7 @@
       "type": "text",
       "id": "recommendations_title",
       "label": "Heading",
-      "default": "Complete your rotation"
+      "default": "Bundle and save"
     },
     {
       "type": "select",
@@ -698,6 +813,30 @@
       "default": "Add"
     },
     {
+      "type": "select",
+      "id": "upsell_image",
+      "label": "Card image",
+      "info": "Pick the second image if it shows the knit better (e.g. flat lay or close-up).",
+      "options": [
+        { "value": "featured", "label": "Featured image" },
+        { "value": "second", "label": "Second image" }
+      ],
+      "default": "featured"
+    },
+    {
+      "type": "select",
+      "id": "upsell_image_focus",
+      "label": "Image focus",
+      "info": "Which part of the image stays visible in the portrait card. A focal point set on the image in Shopify overrides this.",
+      "options": [
+        { "value": "50% 0%", "label": "Top" },
+        { "value": "50% 50%", "label": "Center" },
+        { "value": "50% 70%", "label": "Lower (knitwear)" },
+        { "value": "50% 100%", "label": "Bottom" }
+      ],
+      "default": "50% 70%"
+    },
+    {
       "type": "color",
       "id": "product_card_background",
       "label": "Product card background"
@@ -715,8 +854,15 @@
       "type": "text",
       "id": "save_badge_text",
       "label": "Saving badge",
-      "info": "Use [percent]. Calculated from compare-at prices and the final total. Leave empty to hide.",
-      "default": "Save [percent]%"
+      "info": "Use [percent] and [amount]. Calculated from compare-at prices and the final total. Leave empty to hide.",
+      "default": "You saved [percent]%"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_savings_breakdown",
+      "label": "Show savings breakdown",
+      "info": "Lists the original subtotal, sale savings, each discount (bundle, codes) with its % or amount, and shipping.",
+      "default": true
     },
     {
       "type": "color",

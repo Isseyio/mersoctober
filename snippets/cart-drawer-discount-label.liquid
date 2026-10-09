@@ -1,0 +1,52 @@
+{%- comment -%}
+----------------------------------------------------------------------------------------------------------------------
+CART DRAWER DISCOUNT LABEL
+----------------------------------------------------------------------------------------------------------------------
+
+Readable label for a Shopify discount application, used in the cart drawer savings breakdown and code chips:
+  - discount code, percentage:   "Code WELCOME10 · 10% off"
+  - discount code, fixed amount: "Code WELCOME10 · €10,00 off"
+  - automatic discount:          "Bundle deal · 15% off"
+  - free shipping code:          "Code SHIPFREE · Free shipping"
+
+********************************************
+Supported variables
+********************************************
+
+* discount_application: the discount application to describe (required)
+Texts live in the locale files under cart.drawer.
+{%- endcomment -%}
+
+{%- liquid
+  assign da = discount_application
+  assign detail = ''
+
+  if da.target_type == 'shipping_line'
+    assign detail = 'cart.drawer.free_shipping' | t
+    if da.value_type == 'percentage' and da.value < 100
+      assign percent_value = da.value | round
+      if percent_value != da.value
+        assign percent_value = da.value | round: 1
+      endif
+      assign detail = 'cart.drawer.percent_off_shipping' | t: percent: percent_value
+    endif
+  elsif da.value_type == 'percentage'
+    assign percent_value = da.value | round
+    if percent_value != da.value
+      assign percent_value = da.value | round: 1
+    endif
+    assign detail = 'cart.drawer.percent_off' | t: percent: percent_value
+  elsif da.value_type == 'fixed_amount' and da.allocation_method == 'across'
+    assign fixed_money = da.total_allocated_amount | money
+    assign detail = 'cart.drawer.amount_off' | t: amount: fixed_money
+  endif
+
+  if da.type == 'discount_code'
+    assign name = 'cart.drawer.discount_code' | t: code: da.title
+  else
+    assign name = da.title | escape
+  endif
+-%}
+
+{{- name -}}
+{%- if detail != blank %} · {{ detail }}{% endif -%}

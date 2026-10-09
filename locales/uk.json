@@ -348,6 +348,21 @@
       "remove": "Вилучити",
       "remove_with_title": "Видалити {{ title }}"
     },
+    "drawer": {
+      "free_shipping_remaining_items": "Add {{ remaining }} more {{ units }} to unlock free shipping",
+      "free_shipping_remaining_amount": "You're {{ amount }} away from free shipping",
+      "free_shipping_activated": "Free shipping activated",
+      "free_shipping": "Free shipping",
+      "sale_savings": "Sale savings",
+      "discount_code": "Code {{ code }}",
+      "percent_off": "{{ percent }}% off",
+      "percent_off_shipping": "{{ percent }}% off shipping",
+      "amount_off": "{{ amount }} off",
+      "shipping": "Shipping",
+      "shipping_free": "Free",
+      "shipping_calculated": "Calculated at checkout",
+      "total_savings": "You're saving {{ amount }} on this order"
+    },
     "free_shipping_bar": {
       "limit_unreached_html": "Витратьте ще {{ remaining_amount }} та отримайте безкоштовну доставку!",
       "limit_reached_html": "Ви маєте право на безкоштовну доставку."
