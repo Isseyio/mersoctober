@@ -69,6 +69,7 @@
       assign cd_match_terms = section.settings.bundle_match | downcase | split: ','
       assign cd_bundle_count = 0
       assign cd_knit_sale_savings = 0
+      assign cd_knit_value = 0
 
       for item in cart.items
         assign qualifies = true
@@ -98,6 +99,7 @@
 
         if qualifies
           assign cd_bundle_count = cd_bundle_count | plus: item.quantity
+          assign cd_knit_value = cd_knit_value | plus: item.original_line_price
           if item.variant.compare_at_price > item.original_price
             assign q_saving = item.variant.compare_at_price | minus: item.original_price | times: item.quantity
             assign cd_knit_sale_savings = cd_knit_sale_savings | plus: q_saving
@@ -149,8 +151,27 @@
             assign cd_ship_unlocked = true
           endif
 
-          assign cd_ship_left_money = cd_ship_left | at_least: 0 | money
-          assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_amount' | t: amount: cd_ship_left_money
+          # Say it in knits ("You're one knit away from free shipping"): the gap divided by the average knit price.
+          # The bundle deal lowers the total once the bundle completes, so it is added to the gap until then.
+          assign cd_avg_knit_price = 0
+          if cd_bundle_count > 0
+            assign cd_avg_knit_price = cd_knit_value | divided_by: cd_bundle_count
+          elsif cart.item_count > 0
+            assign cd_avg_knit_price = cart.items_subtotal_price | divided_by: cart.item_count
+          endif
+
+          if cd_avg_knit_price > 0
+            assign cd_ship_gap = cd_ship_left
+            unless cd_bundle_reached
+              assign cd_ship_deal = section.settings.bundle_discount_amount | remove: '€' | replace: ',', '.' | strip | times: 100 | round
+              assign cd_ship_gap = cd_ship_gap | plus: cd_ship_deal
+            endunless
+            assign cd_ship_knits = cd_ship_gap | times: 1.0 | divided_by: cd_avg_knit_price | ceil | at_least: 1
+            assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_knits' | t: count: cd_ship_knits
+          else
+            assign cd_ship_left_money = cd_ship_left | at_least: 0 | money
+            assign cd_ship_unreached = 'cart.drawer.free_shipping_remaining_amount' | t: amount: cd_ship_left_money
+          endif
       endcase
 
       # Shipping cost shown in the footer (and added to the total) while free shipping is not unlocked
@@ -230,8 +251,23 @@
           </button>
         </div>
 
+      </div>
+
+      {%- if section.settings.show_cart_timer -%}
+        <div id="cart-timer-bar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #f5f0eb; margin-bottom: 20px; padding: 8px 12px; font-size: 13px;">
+          <span>Your cart is reserved for <strong id="cart-countdown">10:00</strong></span>
+        </div>
+      {%- endif -%}
+
+      <div class="cd-body">
+        <div class="cart-drawer__line-items cd-lines">
+          {%- for line_item in cart.items -%}
+            {%- render 'cart-drawer-line-item', line_item: line_item, index: forloop.index, section: section -%}
+          {%- endfor -%}
+        </div>
+
         {%- if section.settings.show_bundle_progress -%}
-          <div class="cd-progress {% if cd_bundle_reached %}is-reached{% endif %}">
+          <div class="cd-progress {% if cd_bundle_reached %}is-reached{% endif %}" style="--cd-steps: {{ cd_threshold }}">
             <div class="cd-progress__row">
               <p class="cd-progress__message" aria-live="polite">
                 {%- if cd_bundle_reached -%}
@@ -275,20 +311,6 @@
         {%- elsif settings.cart_show_free_shipping_threshold -%}
           {%- render 'free-shipping-bar' -%}
         {%- endif -%}
-      </div>
-
-      {%- if section.settings.show_cart_timer -%}
-        <div id="cart-timer-bar" style="display: flex; align-items: center; justify-content: center; gap: 8px; background: #f5f0eb; margin-bottom: 20px; padding: 8px 12px; font-size: 13px;">
-          <span>Your cart is reserved for <strong id="cart-countdown">10:00</strong></span>
-        </div>
-      {%- endif -%}
-
-      <div class="cd-body">
-        <div class="cart-drawer__line-items cd-lines">
-          {%- for line_item in cart.items -%}
-            {%- render 'cart-drawer-line-item', line_item: line_item, index: forloop.index, section: section -%}
-          {%- endfor -%}
-        </div>
 
         {%- liquid
           # ------------------------------------------------------------------------------------------------------------
@@ -373,9 +395,9 @@
         -%}
 
         {%- if cd_upsell_rendered > 0 -%}
-          <div class="cd-upsell" role="region" aria-labelledby="{{ cd_carousel_id }}-title">
+          <div class="cd-upsell {% unless cd_bundle_reached %}cd-upsell--no-heading{% endunless %}" role="region" aria-labelledby="{{ cd_carousel_id }}-title">
             <div class="cd-upsell__header">
-              <p class="cd-upsell__heading" id="{{ cd_carousel_id }}-title">{{ section.settings.recommendations_title | escape }}</p>
+              <p class="cd-upsell__heading {% unless cd_bundle_reached %}sr-only{% endunless %}" id="{{ cd_carousel_id }}-title">{{ section.settings.recommendations_title | escape }}</p>
 
               <div class="cd-upsell__nav">
                 <button type="button" class="cd-upsell__arrow" data-cd-carousel-prev aria-controls="{{ cd_carousel_id }}" aria-label="{{ 'general.accessibility.previous' | t | escape }}" disabled>
@@ -766,7 +788,8 @@
       "type": "text",
       "id": "recommendations_title",
       "label": "Heading",
-      "default": "Bundle and save"
+      "info": "Shown above the products once the bundle is complete. Before that, the bundle bar above the products does the talking.",
+      "default": "Complete your rotation"
     },
     {
       "type": "select",

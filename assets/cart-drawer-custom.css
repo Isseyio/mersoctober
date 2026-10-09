@@ -75,6 +75,20 @@
 #cart-drawer .cd-progress {
   display: grid;
   gap: 10px;
+  min-width: 0;
+}
+
+/* Bar sits right above the products: pull them together */
+#cart-drawer .cd-progress + .cd-upsell {
+  margin-block-start: calc(-1 * var(--spacing-2));
+}
+
+#cart-drawer .cd-upsell--no-heading .cd-upsell__header {
+  justify-content: flex-end;
+}
+
+#cart-drawer .cd-upsell--no-heading:not(.cd-upsell--scrollable) .cd-upsell__header {
+  display: none;
 }
 
 #cart-drawer .cd-progress__row {

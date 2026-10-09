@@ -349,6 +349,10 @@
     },
     "drawer": {
       "free_shipping_remaining_items": "Add {{ remaining }} more {{ units }} to unlock free shipping",
+      "free_shipping_remaining_knits": {
+        "one": "You're one knit away from free shipping",
+        "other": "You're {{ count }} knits away from free shipping"
+      },
       "free_shipping_remaining_amount": "You're {{ amount }} away from free shipping",
       "free_shipping_activated": "Free shipping activated",
       "free_shipping": "Free shipping",
