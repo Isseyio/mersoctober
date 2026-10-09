@@ -456,7 +456,11 @@
         <div class="cd-totals">
           <div class="cd-totals__row">
             <p>{{ 'cart.general.subtotal' | t }}</p>
-            <p>{{ cd_original_total | money }}</p>
+            {%- if cd_total_savings > 0 -%}
+              <p><s class="cd-totals__original">{{ cd_original_total | money }}</s></p>
+            {%- else -%}
+              <p>{{ cd_original_total | money }}</p>
+            {%- endif -%}
           </div>
 
           {%- if cart.requires_shipping -%}

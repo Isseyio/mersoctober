@@ -540,6 +540,10 @@
 }
 
 
+#cart-drawer .cd-totals__original {
+  color: var(--cd-muted);
+}
+
 #cart-drawer .cd-totals__free {
   color: var(--cd-progress-fill);
   font-weight: 500;
