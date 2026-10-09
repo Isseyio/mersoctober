@@ -1,1 +1,132 @@
-{"type":"footer","name":"Footer group","sections":{"footer":{"type":"footer","blocks":{"newsletter_8gAB9m":{"type":"newsletter","settings":{"image_width":150,"heading_size":"h5","title":"Sign up to our newsletter for 10% off","content":"<p>Stay up-to-date with the latest collections, new pieces, events and exclusive offers dedicated to Merso® Members.<\/p>"}},"links_QipdQk":{"type":"links","settings":{"menu":"company","show_menu_title":false,"menu_title":""}},"links_aBmcrb":{"type":"links","settings":{"menu":"info","show_menu_title":false,"menu_title":"Customer Care"}},"links_R3iUFX":{"type":"links","settings":{"menu":"legal","show_menu_title":false,"menu_title":""}},"links_mdi4Re":{"type":"links","settings":{"menu":"customer-account-main-menu","show_menu_title":false,"menu_title":""}}},"block_order":["newsletter_8gAB9m","links_QipdQk","links_aBmcrb","links_R3iUFX","links_mdi4Re"],"settings":{"show_social_media":true,"show_payment_icons":true,"show_policy_links":true,"show_country_selector":true,"show_country_flag":false,"show_country_name":true,"show_locale_selector":true}},"multi_column_M3bQdp":{"type":"multi-column","blocks":{"item_DKnTXD":{"type":"item","settings":{"image":"shopify:\/\/shop_images\/A_table_of_textures.Cashmere_layers_thoughtfully_presented.Discover_more_at_lucafaloni.com_Luca.jpg","show_controls":false,"column_size":"3","title":"Column title","heading_tag":"h4","content":"<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.<\/p>","link_url":"","link_text":"","link_style":"link"}},"item_WbaAga":{"type":"item","settings":{"image":"shopify:\/\/shop_images\/Our_Cashmere_Baseball_Cap_brings_softness_and_ease_to_everyday_dressing._A_considered_finishing.jpg","show_controls":false,"column_size":"3","title":"Column title","heading_tag":"h4","content":"<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.<\/p>","link_url":"","link_text":"","link_style":"link"}}},"block_order":["item_DKnTXD","item_WbaAga"],"disabled":true,"name":"Multi-column","settings":{"full_width":true,"stack_on_mobile":false,"gap":"medium","text_alignment":"start","subheading":"","title":"","content":"<h4>Discover our world<\/h4>","background":"#edebe7","background_gradient":"","text_color":"#1a1a1a"}}},"order":["footer","multi_column_M3bQdp"]}
+/*
+ * ------------------------------------------------------------
+ * IMPORTANT: The contents of this file are auto-generated.
+ *
+ * This file may be updated by the Shopify admin theme editor
+ * or related systems. Please exercise caution as any changes
+ * made to this file may be overwritten.
+ * ------------------------------------------------------------
+ */
+{
+  "type": "footer",
+  "name": "Footer group",
+  "sections": {
+    "footer": {
+      "type": "footer",
+      "blocks": {
+        "newsletter_8gAB9m": {
+          "type": "newsletter",
+          "settings": {
+            "image_width": 150,
+            "heading_size": "h5",
+            "title": "Sign up to our newsletter for 15% off",
+            "content": "<p>Stay up-to-date with the latest collections, new pieces, events and exclusive offers dedicated to Merso® Members.</p>"
+          }
+        },
+        "links_QipdQk": {
+          "type": "links",
+          "settings": {
+            "menu": "company",
+            "show_menu_title": false,
+            "menu_title": ""
+          }
+        },
+        "links_aBmcrb": {
+          "type": "links",
+          "settings": {
+            "menu": "info",
+            "show_menu_title": false,
+            "menu_title": "Customer Care"
+          }
+        },
+        "links_R3iUFX": {
+          "type": "links",
+          "settings": {
+            "menu": "legal",
+            "show_menu_title": false,
+            "menu_title": ""
+          }
+        },
+        "links_mdi4Re": {
+          "type": "links",
+          "settings": {
+            "menu": "customer-account-main-menu",
+            "show_menu_title": false,
+            "menu_title": ""
+          }
+        }
+      },
+      "block_order": [
+        "newsletter_8gAB9m",
+        "links_QipdQk",
+        "links_aBmcrb",
+        "links_R3iUFX",
+        "links_mdi4Re"
+      ],
+      "settings": {
+        "show_social_media": true,
+        "show_payment_icons": true,
+        "show_policy_links": true,
+        "show_country_selector": true,
+        "show_country_flag": false,
+        "show_country_name": true,
+        "show_locale_selector": true
+      }
+    },
+    "multi_column_M3bQdp": {
+      "type": "multi-column",
+      "blocks": {
+        "item_DKnTXD": {
+          "type": "item",
+          "settings": {
+            "image": "shopify://shop_images/A_table_of_textures.Cashmere_layers_thoughtfully_presented.Discover_more_at_lucafaloni.com_Luca.jpg",
+            "show_controls": false,
+            "column_size": "3",
+            "title": "Column title",
+            "heading_tag": "h4",
+            "content": "<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>",
+            "link_url": "",
+            "link_text": "",
+            "link_style": "link"
+          }
+        },
+        "item_WbaAga": {
+          "type": "item",
+          "settings": {
+            "image": "shopify://shop_images/Our_Cashmere_Baseball_Cap_brings_softness_and_ease_to_everyday_dressing._A_considered_finishing.jpg",
+            "show_controls": false,
+            "column_size": "3",
+            "title": "Column title",
+            "heading_tag": "h4",
+            "content": "<p>Pair text with an image to focus on your chosen product, collection, or blog post. Add details on availability, style, or even provide a review.</p>",
+            "link_url": "",
+            "link_text": "",
+            "link_style": "link"
+          }
+        }
+      },
+      "block_order": [
+        "item_DKnTXD",
+        "item_WbaAga"
+      ],
+      "disabled": true,
+      "name": "Multi-column",
+      "settings": {
+        "full_width": true,
+        "stack_on_mobile": false,
+        "gap": "medium",
+        "text_alignment": "start",
+        "subheading": "",
+        "title": "",
+        "content": "<h4>Discover our world</h4>",
+        "background": "#edebe7",
+        "background_gradient": "",
+        "text_color": "#1a1a1a"
+      }
+    }
+  },
+  "order": [
+    "footer",
+    "multi_column_M3bQdp"
+  ]
+}
